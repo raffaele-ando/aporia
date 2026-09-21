@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      viewBox="0 0 1254 1254" width="1254" height="1254" id="agoraDustLogo"
      role="img" aria-labelledby="agoraTitle agoraDesc">
-  <title id="agoraTitle">Agorà — logo dust</title>
+  <title id="agoraTitle">Agorà — logo dust (inverso)</title>
   <desc id="agoraDesc">Logo Agorà con polvere procedurale. Il disegno è una maschera:
   il colore si cambia con --ink (tinta piatta o url di un gradiente), il fondo con --bg
   (di default trasparente), e si passa da chiaro-su-scuro a scuro-su-chiaro con --mask.</desc>
 
   <style>
     #agoraDustLogo {
-      --ink: #ffffff;                 /* tinta o gradiente del logo: es. url(#agoraGradient) */
+      --ink: #0b0b0c;                 /* tinta o gradiente del logo: es. url(#agoraGradient) */
       --bg: transparent;              /* fondo: transparent, #000, #fff, url(#...)           */
-      --mask: url(#agoraMaskLight);   /* url(#agoraMaskDark) = logo scuro su fondo chiaro    */
+      --mask: url(#agoraMaskDark);   /* url(#agoraMaskDark) = logo scuro su fondo chiaro    */
       --glow: 1;                      /* 0..1.5 alone esterno                                */
       --dust: 1;                      /* 0 = superficie pulita, 1 = polvere piena            */
       /* colori del gradiente pronto all'uso */
