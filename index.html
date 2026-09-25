@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&display=swap">
 <style>
   /* un solo mondo visivo, scuro per scelta: fondo e colori sempre espliciti */
-  :root { color-scheme: dark; --night: #000; --paper: #ece8e1; --home-bg: #070708; }
+  :root { color-scheme: dark; --night: #000; --paper: #ece8e1; --home-bg: #000; }
   html, body { height: 100%; }
   body { margin: 0; background: var(--night); color: var(--paper); overflow: hidden; }
 
@@ -25,7 +25,9 @@
   body:not(.home) #home h1 { letter-spacing: 0.42em; margin-right: -0.42em; }
 
   #intro { position: fixed; inset: 0; background: var(--night); transition: opacity .6s ease; }
-  #intro video { width: 100%; height: 100%; object-fit: contain; display: block; background: var(--night); }
+  /* il video riempie sempre tutto lo schermo (niente bande nere): il logo sta nella zona centrale
+     che resta visibile con qualsiasi proporzione */
+  #intro video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--night); }
   body.home #intro { opacity: 0; pointer-events: none; }
 </style>
 </head>
