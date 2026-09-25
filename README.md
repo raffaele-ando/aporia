@@ -16,7 +16,50 @@ la home, che per ora mostra solo la scritta **Aporia**.
 | `versioni/` | tutte le animazioni di apertura fatte finora: pagine originali v1–v7 e video di tutte in `media/` |
 | `intro-canvas.html` | versione precedente, calcolata dal vivo nel browser (tenuta come riferimento) |
 | `preview/` | fotogrammi di controllo (telefono e desktop) |
+| `laboratorio.html` | prova colori, fondi e formati; anteprima come transizione tra due clip |
+| `export/` | l'animazione pronta da usare in video, social e presentazioni (vedi sotto) |
+| `src/master/` | la simulazione v10 salvata come "luce" (bianco su nero, 60 fps): la base di ogni export |
 | `src/` | script che generano tutto |
+
+## Usare l'animazione fuori dal sito
+
+La versione 10 si può usare da sola in un video, come transizione tra clip sui social o in una
+presentazione, con il colore che vuoi e senza fondo nero. I file pronti sono in `export/`
+(nome: `aporia-intro-<formato>-<colore>-<tipo>`):
+
+| Dove la usi | File | Come |
+|---|---|---|
+| CapCut, InShot, app sul telefono | `…-ffffff-su-nero.mp4` | mettila sopra la clip come sovrapposizione, fusione **Scherma** (o Schiarisci): il nero sparisce |
+| Stesse app, su fondo chiaro | `…-101014-su-f2efe9.mp4` | fusione **Moltiplica**: sparisce il chiaro, resta la polvere scura |
+| Premiere, Final Cut, DaVinci, After Effects, Keynote, CapCut desktop | `…-trasparente.mov` | ProRes 4444 con trasparenza vera, 30 fps; basta metterla sopra |
+| Canva, siti web, OBS | `…-trasparente.webm` | WebM VP9 con trasparenza, leggero |
+| PowerPoint, Google Presentazioni | `…-su-nero.mp4` | su una slide nera (non gestiscono i video trasparenti) |
+
+**Come transizione:** la polvere copre di più intorno a 1,4 s; taglia lì dalla clip A alla clip B
+e il passaggio resta nascosto dietro il logo che si forma e poi vola via.
+
+Formati: 9:16 (Reel, Storie, TikTok), 4:5 e 1:1 (post), 16:9 (YouTube, presentazioni). Ci sono già
+bianco, scuro `#101014` e un gradiente arancio-rosa-blu.
+
+**Altri colori** senza rifare la simulazione:
+
+```
+python src/export.py --color "#d9b56a" --format 9:16
+python src/export.py --gradient "#ff8a3d,#ff2e63,#4d5bff" --angle 45 --format 16:9
+python src/export.py --color "#101014" --bg "#f2efe9" --types mp4
+python src/export.py --types mov --fps 30        # per i programmi di montaggio
+python src/export.py --types png                 # sequenza di PNG trasparenti
+```
+
+Il modo più semplice: apri `laboratorio.html`, scegli colore, fondo e formato, guarda l'anteprima
+(anche come transizione tra due clip) e copia il comando che compare in fondo.
+
+- La trasparenza nasce dalla luce della polvere: dove la polvere è piena il colore è pieno, dove
+  è rada è semitrasparente, quindi i bordi restano morbidi su qualsiasi fondo.
+- I `.mov` pesano 70–95 MB e non sono nel repository (`.gitignore`): si rigenerano con
+  `python src/export.py --types mov --fps 30 --format 9:16` (e `16:9`).
+- Non c'è una versione HEVC con trasparenza (quella che usano iPhone e iMovie): lo strumento
+  usato qui non la sa creare. Su iPhone si usa l'MP4 su nero con la fusione Scherma.
 
 ## Selettore delle animazioni
 
