@@ -183,6 +183,13 @@ pixel per pixel, ma ha grana, intensità per zona e scie dell'originale.
   chiaro" cursori e animazioni non avevano effetto (ora c'è un solo filtro per le due polarità);
   esposizione e contrasto spostavano anche il nero (fondo grigio) e tagliavano i bianchi. Ora sono
   una curva che lascia fermi nero e bianco.
+- **Passaggio da colore forte a lieve troppo netto nel fiume** (sotto la bandiera, ben visibile
+  in "scuro su chiaro" e con i gradienti): alcuni tratti del bordo del fiume venivano trattati
+  come bordi netti e tagliavano di colpo la fascia chiara. Ora tutti i bordi curvi del fiume
+  sfumano come nell'originale. Restano netti il contorno esterno, i lati della punta interna e
+  i bordi interni dritti delle gambe, che fanno parte della A. Anche la mappa della morbidezza
+  del bordo è continua: niente cuciture dove si passa da netto a morbido. Prima/dopo in
+  `preview/prima-dopo-fiume.png`.
 
 ## Come sono stati ricostruiti
 

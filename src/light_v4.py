@@ -10,6 +10,51 @@ from levels import level_paths
 from warp_field import warp_path_d
 import light_v3 as L
 
+def flatten(d, n=12):
+    """path M/L/C assoluto -> lista di polilinee"""
+    import re
+    toks = re.findall(r'[MLCZ]|-?\d+\.?\d*', d); out = []; cur = None; i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t == 'M':
+            cur = [np.array([float(toks[i+1]), float(toks[i+2])])]; out.append(cur); i += 3
+        elif t == 'L':
+            cur.append(np.array([float(toks[i+1]), float(toks[i+2])])); i += 3
+        elif t == 'C':
+            p0 = cur[-1]; c = np.array(toks[i+1:i+7], float).reshape(3, 2)
+            for u in np.linspace(0, 1, n)[1:]:
+                cur.append((1-u)**3*p0 + 3*(1-u)**2*u*c[0] + 3*(1-u)*u**2*c[1] + u**3*c[2])
+            i += 7
+        else:
+            if cur: cur.append(cur[0])
+            i += 1
+    return [np.array(c) for c in out]
+
+def seg_dist(q, a, b):
+    a = np.asarray(a, float); b = np.asarray(b, float); ab = b - a
+    t = np.clip(((q - a) @ ab)/(ab @ ab), 0, 1)
+    return np.hypot(*(q - (a + t[:, None]*ab)).T)
+
+def river_edges(M, dout, open_d, notch_y=(548, 568)):
+    """bordi curvi del fiume (non la punta interna, non i bordi interni dritti delle gambe,
+    che fanno parte della A): lì nell'originale la luce sfuma, quindi vanno morbidi"""
+    from PIL import ImageDraw
+    im = Image.new('L', (1254, 1254), 0); dr = ImageDraw.Draw(im)
+    for c in flatten(open_d): dr.line([tuple(q) for q in c], fill=255, width=1)
+    Dopen = distance_transform_edt(np.array(im) == 0)
+    ys, xs = np.nonzero((dout > 0) & (dout < 2))
+    src = np.stack([xs, ys], 1) + 0.5
+    p1 = src + L.W1(src); q = p1 + L.W2(p1)
+    qi = np.clip(np.round(q).astype(int), 0, 1253)
+    near = Dopen[qi[:, 1], qi[:, 0]] < 6
+    wy = np.clip((q[:, 1] - notch_y[0])/(notch_y[1] - notch_y[0]), 0, 1)
+    # i tratti dritti del taglio (comandi L) sono i bordi interni delle gambe
+    straight = [((769.54, 846.32), (826.11, 990)), ((499.96, 737.58), (392.17, 990))]
+    for a, b in straight:
+        wy = wy*np.clip((seg_dist(q, a, b) - 3)/25, 0, 1)
+    out = np.zeros(M.shape); out[ys, xs] = near*wy
+    return out
+
 def build_field():
     R = np.array(Image.open('src/src_dust.webp').convert('L'))/255.
     M = np.array(Image.open('src/dust_shape_mask.png').convert('L')) > 127
@@ -18,16 +63,26 @@ def build_field():
     o = ncv((dout >= 3) & (dout < 10)); i = ncv((din >= 3) & (din < 9))
     soft = np.clip((o/(i+0.03) - 0.12)/0.2, 0, 1)          # 1 = la luce esce dalla sagoma
     bnd = (dout > 0) & (dout < 2)
-    _, (by, bx) = distance_transform_edt(~bnd, return_indices=True)
-    S = gaussian_filter(soft[by, bx], 8)
-    core = din >= 3
-    _, (iy, ix) = distance_transform_edt(~core, return_indices=True)
-    near = R[iy, ix]
+    import eval_v3 as V
+    soft = np.maximum(soft, river_edges(M, dout, V.open_d))
+    # media pesata dei bordi vicini (non "bordo più vicino": quello crea salti netti a metà strada)
+    b = bnd*1.
+    S = gaussian_filter(soft*b, 14)/np.maximum(gaussian_filter(b, 14), 1e-4)
+    far = gaussian_filter(b, 14) < 2e-3
+    if far.any():
+        S2 = gaussian_filter(soft*b, 40)/np.maximum(gaussian_filter(b, 40), 1e-6); S[far] = S2[far]
+    core = (din >= 3)*1.
+    # prolungamento morbido (convoluzione normalizzata a due scale), non "pixel più vicino":
+    # quello creava strisce dritte e nette dove il bordo è semi-morbido
+    n1, d1 = gaussian_filter(R*core, 4), gaussian_filter(core, 4)
+    n2, d2 = gaussian_filter(R*core, 10), gaussian_filter(core, 10)
+    near = np.where(d1 > 0.08, n1/np.maximum(d1, 1e-6), n2/np.maximum(d2, 1e-6))
+    core = core > 0
     hard = R.copy(); rim = M & ~core; hard[rim] = near[rim]
     # prolungamento solo fin dove la correzione ha spostato i bordi (max ~14 px), poi sfuma
     fade = np.clip((24 - dout)/8, 0, 1)
     out = ~M; hard[out] = np.maximum(R[out], near[out]*fade[out])
-    Hw = np.clip((0.8 - S)/0.6, 0, 1)                    # peso dei bordi netti
+    Hw = np.clip((0.6 - S)/0.25, 0, 1)                   # peso dei bordi netti: prolungamento pieno fino a S 0.35
     G = R + Hw*(hard - R)
     G[dout > 45] = 0
     zone = (S > 0.5) & (M | (dout < 40))
@@ -58,7 +113,7 @@ def levels(Fw, N=48, eps=1.6, min_area=120):
         if d: out.append(((ts[k]+ts[k+1])/2, d))
     return out
 
-def soft_levels(Sw, N=8):
+def soft_levels(Sw, N=16):
     """morbidezza del bordo (0 = netto, 1 = decide solo la luce) come tracciati annidati"""
     out = []
     for k in range(1, N+1):

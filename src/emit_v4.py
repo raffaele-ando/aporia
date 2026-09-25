@@ -24,7 +24,7 @@ P4 = dict(
     speck_fx=0.34, speck_fy=0.21, speck_oct=3, speck_seed=23, speck_slope=5.0, speck_thr=0.60,
     speck_sweep=22, halo=9.0, speck_gain=1.0,
     highlight="1 1 1 1 1 0.95 0.82 0.6 0.3",   # quanta polvere per fascia di luce (dal nero al bianco)
-    edge_sigmas=(0.6, 3.5, 9.0), edge_top=14.0,   # morbidezza del bordo: netto -> sfumato
+    edge_sigmas=(0.6, 3.5, 9.0), edge_top=14.0, edge_map_blur=7.0,   # morbidezza del bordo: netto -> sfumato
 )
 
 def rg(v):
@@ -133,7 +133,8 @@ def edge_filter(fid, P, open_top):
     tent = lambda v: f'<feFuncR type="table" tableValues="{v}"/><feFuncG type="table" tableValues="{v}"/><feFuncB type="table" tableValues="{v}"/>'
     return f'''<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
       <feColorMatrix in="SourceGraphic" type="matrix" values="{R2RGB.replace('0 0 0 1 0', '0 0 0 0 1')}" result="shp"/>
-      <feColorMatrix in="SourceGraphic" type="matrix" values="{G2RGB}" result="soft"/>
+      <feColorMatrix in="SourceGraphic" type="matrix" values="{G2RGB}" result="soft0"/>
+      <feGaussianBlur in="soft0" stdDeviation="{P['edge_map_blur']}" result="soft"/>
       <feGaussianBlur in="shp" stdDeviation="{s1}" result="b1"/>
       <feGaussianBlur in="shp" stdDeviation="{s2}" result="b2"/>
       <feGaussianBlur in="shp" stdDeviation="{s3}" result="b3"/>
