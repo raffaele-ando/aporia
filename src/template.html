@@ -134,6 +134,20 @@
     g.putImageData(img, 0, 0);
   }
 
+  // ---- maschera di accumulo: il logo esiste solo dove la polvere si è posata ----------
+  const AQ = 0.25;                                    // risoluzione della maschera (unità del viewBox → px)
+  const ac = document.createElement('canvas'), acc = ac.getContext('2d');
+  ac.width = Math.round(UW*AQ); ac.height = Math.round(VH*AQ);
+  const puff = document.createElement('canvas');     // "sbuffo" morbido lasciato da un granello
+  puff.width = puff.height = 32;
+  { const g = puff.getContext('2d'), r = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.45, 'rgba(255,255,255,.55)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 32, 32); }
+  function deposit(u, v, a, rad) {                    // u, v in unità del viewBox; rad nelle stesse unità
+    const R = rad*AQ, px = (u - U0)*AQ, py = (v - V0)*AQ;
+    acc.globalAlpha = a; acc.drawImage(puff, px - R, py - R, 2*R, 2*R);
+  }
+
   // ---- punti del logo (la polvere si posa dove il logo è chiaro) ------------
   let targets = [];            // {u, v, l} in unità del viewBox 1254, ordinati per u
   function sampleLogo() {
@@ -145,7 +159,7 @@
     while (pts.length < 2600 && tries < 400000) {
       tries++;
       const x = Math.random()*n, y = Math.random()*m, l = d[((y|0)*n + (x|0))*4 + 3]/255;
-      if (Math.random() < l*l) pts.push({ u: U0 + x/k, v: V0 + y/k, l, gone: false });
+      if (Math.random() < Math.pow(l, 1.3)) pts.push({ u: U0 + x/k, v: V0 + y/k, l, gone: false });
     }
     targets = pts.sort((a, b) => a.u - b.u);
   }
@@ -253,26 +267,35 @@
       for (let i = 0; i < n; i++) {
         const tg = targets[(i*targets.length/n)|0];
         const q = i % 2 === 0 ? picked[i >> 1] : null;
-        formers.push(q ? { tg, x: q.x, y: q.y, vx: q.vx, vy: q.vy, a: 0.3 + tg.l*0.6, born: 0 }
-                       : { tg, x: Math.random()*W*0.8 - W*0.15, y: Math.random()*H, vx: 300*VS, vy: 0,
+        const jit = (Math.random() - 0.5)*0.22;
+        formers.push(q ? { tg, jit, done: 0, x: q.x, y: q.y, vx: q.vx, vy: q.vy, a: 0.3 + tg.l*0.6, born: 0 }
+                       : { tg, jit, done: 0, x: -20 - Math.random()*W*0.3, y: box.y + tg.v*box.s + (Math.random() - 0.5)*H*0.6, vx: 300*VS, vy: 0,
                            a: 0.3 + tg.l*0.6, born: t });
       }
     }
-    const pull = smooth(T.form[0] - 0.6, T.form[0] + 0.7, t);
-    const fade = 1 - smooth(T.form[0] + 0.3, T.form[1], t);
-    if (fade > 0) for (let i = 0; i < formers.length; i++) {
+    // ogni granello ha il suo momento: il logo si costruisce da sinistra a destra, come soffia il vento
+    const rad = 26/Math.sqrt(Math.max(0.3, formers.length/1400));   // meno granelli → sbuffi più larghi
+    for (let i = 0; i < formers.length; i++) {
       const p = formers[i];
+      if (p.done && t - p.done > 0.5) continue;
+      const s0 = T.form[0] - 0.75 + ((p.tg.u - U0)/UW)*0.95 + p.jit;
+      const pull = smooth(s0, s0 + 0.75, t);
       const tx = box.x + p.tg.u*box.s, ty = box.y + p.tg.v*box.s;
       flow(p.x, p.y, t);
       const k = 1 - Math.exp(-dt*3);
       p.vx += (f[0]*(1 - pull) - p.vx)*k; p.vy += (f[1]*(1 - pull) - p.vy)*k;
-      const ox = p.x, oy = p.y, g = 1 - Math.exp(-dt*6*pull);   // si posa senza rimbalzi
+      const ox = p.x, oy = p.y, g = 1 - Math.exp(-dt*7*pull);   // si posa senza rimbalzi
       p.x += p.vx*dt + (tx - p.x)*g; p.y += p.vy*dt + (ty - p.y)*g;
+      const d = Math.hypot(tx - p.x, ty - p.y)/box.s;          // distanza dal suo punto, in unità del logo
+      // arrivando lascia polvere: prima una traccia leggera lungo il percorso, poi lo sbuffo pieno
+      if (!p.done && pull > 0.2 && d < 90) deposit((p.x - box.x)/box.s, (p.y - box.y)/box.s, 0.05*pull, rad*0.7);
+      if (!p.done && pull > 0.55 && d < 4) { p.done = t; deposit(p.tg.u, p.tg.v, 0.85, rad); }
+      const fade = p.done ? 1 - (t - p.done)/0.5 : 1;
       const af = p.a*fade*(p.born ? smooth(p.born, p.born + 0.6, t) : 1);
-      if (pull < 0.25) queue(ox, oy, p.x, p.y, af, false);    // finché il vento li porta: scia nell'aria
-      else {                                                 // quando si posano: granelli minuscoli, senza scia
-        let dx = p.x - ox, dy = p.y - oy; const L = Math.hypot(dx, dy) || 1, len = Math.min(2.2, L);
-        settle.add(p.x - dx/L*len, p.y - dy/L*len, p.x, p.y, af*0.55*(1 - pull*0.6), false);
+      if (pull < 0.35) queue(ox, oy, p.x, p.y, af, false);    // portato dal vento: scia nell'aria
+      else {                                                 // in arrivo: granello luminoso che scivola al suo posto
+        let dx = p.x - ox, dy = p.y - oy; const L = Math.hypot(dx, dy) || 1, len = Math.min(7*VS, L*1.5);
+        settle.add(p.x - dx/L*len, p.y - dy/L*len, p.x, p.y, af*0.9, false);
       }
     }
 
@@ -282,16 +305,19 @@
     const fp = clamp((t - T.form[0])/(T.form[1] - T.form[0]), 0, 1);
     const xp = clamp((t - T.exit[0])/(T.exit[1] - T.exit[0]), 0, 1);
     if (xp <= 0) {
-      // la scia di vento del logo scivola al suo posto e sfuma mentre il logo nitido compare
-      // logo e scia sono un solo oggetto: arrivano insieme col vento e, fermandosi, la scia si ritira
-      const sa = 0.9*smooth(T.form[0] - 0.55, T.form[0] + 0.15, t)*(1 - smooth(T.form[0] + 0.35, T.form[1] + 0.1, t));
-      const slide = 150*box.s*Math.pow(1 - smooth(T.form[0] - 0.55, T.form[1], t), 1.6);
-      if (sa > 0.002) {
-        lctx.globalAlpha = sa; lctx.globalCompositeOperation = 'lighter';
-        lctx.drawImage(frames[2], x - slide, y, w, h);
-        lctx.globalAlpha = 1; lctx.globalCompositeOperation = 'source-over';
+      // il logo si vede solo dove la polvere si è posata; alla fine la maschera si chiude del tutto
+      const fill = smooth(T.form[1] - 0.35, T.form[1] + 0.25, t);
+      if (fill >= 1) drawLogo(lctx, 1, t, x, y, w, h);
+      else if (t > T.form[0] - 0.8) {
+        if (fill > 0) { acc.globalAlpha = fill*0.25; acc.fillStyle = '#fff'; acc.fillRect(0, 0, ac.width, ac.height); }
+        acc.globalAlpha = 1;
+        lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.clearRect(0, 0, lc.width, lc.height);
+        drawLogo(lcc, 1, t, 0, 0, lc.width, lc.height);
+        lcc.globalCompositeOperation = 'destination-in';
+        lcc.drawImage(ac, 0, 0, lc.width, lc.height);
+        lcc.globalCompositeOperation = 'source-over';
+        lctx.drawImage(lc, x, y, w, h);
       }
-      drawLogo(lctx, easeOut(fp), t, x - slide, y, w, h);
     } else if (xp < 1) {
       // uscita: il vento lo sgretola da sinistra a destra con un fronte frastagliato
       const e = easeInOut(xp), F = (0.1 + 0.8*e)*1254;
@@ -380,7 +406,7 @@
   function play() {
     cancelAnimationFrame(raf);
     intro.classList.remove('gone'); intro.style.opacity = '1'; setTitle(0);
-    formers = []; blown = []; formed = false; emitIdx = 0; t = 0; last = 0; slow = []; budget = 1; DPR_MAX = 2;
+    formers = []; blown = []; formed = false; emitIdx = 0; acc.clearRect(0, 0, ac.width, ac.height); t = 0; last = 0; slow = []; budget = 1; DPR_MAX = 2;
     targets.forEach(tg => { tg.gone = false; });
     resize();
     makeAmbient(Math.round(clamp(W*H/340, 1100, 3400)*budget));
