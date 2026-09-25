@@ -1,13 +1,12 @@
-"""Costruisce l'apertura del sito Aporia: src/template.html + logo dust (da ../agora_loghi_svg).
+"""Costruisce l'apertura del sito Aporia: src/template.html + fotogrammi del logo dust (src/logo_frames.json).
 Uscite: index.html (pagina completa) e, se si passa un percorso, la versione senza <html>/<head>
 usata per l'anteprima pubblicata."""
 import sys, re, pathlib
 here = pathlib.Path(__file__).resolve().parent
 root = here.parent
-svg = (root.parent/'agora_loghi_svg'/'agora-logo-dust.svg').read_text()
-svg = svg.replace('width="1254" height="1254" id="agoraDustLogo"', 'width="100%" height="100%" id="agoraDustLogo" focusable="false"', 1)
-svg = re.sub(r'\s*role="img" aria-labelledby="agoraTitle agoraDesc"', ' aria-hidden="true"', svg, count=1)
-body = (here/'template.html').read_text().replace('__LOGO__', svg)
+# fotogrammi del logo (src/render_logo.py li rigenera dall'SVG di ../agora_loghi_svg)
+logo = (here/'logo_frames.json').read_text()
+body = (here/'template.html').read_text().replace('__LOGO_JSON__', logo)
 title_end = body.index('</title>') + len('</title>')
 head, rest = body[:title_end], body[title_end:]
 style_end = rest.index('</style>') + len('</style>')
