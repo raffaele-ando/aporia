@@ -89,8 +89,9 @@ def fit_arc(pts, P0, P1, K, fix_t1=None, fix_t2=None, n_per=120, max_nfev=300, s
     fit_pts = pts[::stride]
     if not np.allclose(fit_pts[-1], pts[-1]):
         fit_pts = np.vstack([fit_pts, pts[-1]])
+    method = 'lm' if len(fit_pts) > len(x0) else 'trf'
     res = least_squares(residuals, x0, args=(fit_pts, P0, P1, K, fix_t1, fix_t2, n_per),
-                        method='lm', max_nfev=max_nfev, xtol=1e-11, ftol=1e-11)
+                        method=method, max_nfev=max_nfev, xtol=1e-11, ftol=1e-11)
     ctrls = chain_points(res.x, P0, P1, K, fix_t1, fix_t2)
     S = sample_chain(ctrls, 600)
     d, _ = cKDTree(S).query(pts)

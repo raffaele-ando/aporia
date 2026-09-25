@@ -14,26 +14,35 @@ SVG puri: nessuna immagine raster incorporata, nessuna dipendenza esterna.
 | `agora-logo-dust-tight.svg` | Versione polvere ritagliata sulla forma |
 | `agora-logo-tracciato-fedele.svg` | Tracciato fedele al pixel dell'immagine caricata (senza correzione della lettera) |
 | `agora-dust-lab.html` | Laboratorio: colore, gradiente, polarità, polvere e animazioni dal vivo, con export |
-| `preview/` | Anteprime PNG e confronti |
+| `preview/` | Anteprime PNG e tavola di costruzione |
 
 ## 1. La lettera prima di tutto
 
-L'immagine di partenza aveva una irregolarità misurabile: la **gamba destra si svasava**
-(bordo esterno con pendenza 0.500, bordo interno 0.450 → non paralleli) e pesava
-**157→165 px** contro i **152.4 px costanti** dell'asta sinistra.
+La A è costruita con uno scheletro esattamente simmetrico rispetto all'asse centrale
+(tavola in `preview/costruzione.png`). Valori nel file `agora-logo.svg`:
 
-Nel logo di questo repo la gamba destra è stata resa **parallela e dello stesso peso (152 px)**;
-il resto dello scheletro era già corretto e non è stato toccato:
+| Elemento | Sinistra | Destra |
+|---|---|---|
+| base | a 0° (tutti i punti a y = 671,870) | a 0° |
+| cima | a 0° (y = 0), larga 151,20 | — |
+| cima: distanza dall'asse | 75,600 | 75,600 |
+| piede: larghezza | 170,037 | 170,037 |
+| piede: bordo esterno dall'asse | 401,375 | 401,375 |
+| piede: bordo interno dall'asse | 231,338 | 231,338 |
+| angolo del diagonale esterno | 64,13° | 64,13° |
+| spessore dell'asta (perpendicolare) | 153 | 153 |
 
-- i due diagonali esterni sono simmetrici: **63.0°** a sinistra, **63.4°** a destra;
-- basi dei piedi e sommità perfettamente orizzontali, sulla stessa linea;
-- punte arrotondate come raccordi veri, non come spigoli approssimati.
+Rispetto all'immagine di partenza sono state corrette due cose che si misuravano:
+la gamba destra si svasava ed era più spessa (157→165 contro 152), e la cima era
+spostata di 15,6 a destra rispetto al centro della base, per cui la lettera sembrava
+inclinata. Ora cima, piedi, angoli e spessori sono identici dalle due parti.
+Il fiume e la "bandiera" a destra restano asimmetrici: sono il disegno del logo.
 
-Vedi `preview/confronto-geometria.png` (in rosso il materiale tolto).
-La stessa lettera corretta è usata **anche sotto la polvere**: nella versione dust i bordi
-hanno pendenza esatta ±0.500 anche dopo grana, alone e turbolenza.
+La stessa lettera è usata sotto la polvere (anche lì base e cima a 0° e simmetria
+dall'asse, verificate sul file).
 
-Se preferisci il disegno esattamente com'era nell'immagine, usa `agora-logo-tracciato-fedele.svg`.
+Se ti serve il disegno esattamente com'era nell'immagine caricata, usa
+`agora-logo-tracciato-fedele.svg`.
 
 ## 2. Colore, gradiente, trasparenza
 
@@ -114,9 +123,10 @@ velocità e interruttori delle animazioni, export SVG e PNG 2048.
 Render in Chromium alla stessa risoluzione delle immagini, confronto pixel per pixel.
 
 **Logo pulito** — errore medio **0.67/255** (0.26%), IoU **0.997** sul tracciato fedele;
-la versione corretta si discosta solo dove la gamba è stata raddrizzata (voluto).
+la versione corretta se ne discosta dove la lettera è stata resa simmetrica (voluto).
 
-**Logo dust** — errore medio **~3/255** (1.2%), distribuzione della luce (dopo sfocatura)
+**Logo dust** — errore medio **4/255** (1.6%) rispetto all'immagine: la differenza in più è la
+correzione voluta della lettera. Distribuzione della luce (dopo sfocatura)
 errore **0.006** su scala 0-1 dentro la sagoma. Statistica della grana per fascia di luminosità:
 
 | luminosità | 0.1 | 0.2 | 0.4 | 0.5 | 0.7 | 0.8 | 0.95 |
@@ -133,8 +143,9 @@ pixel per pixel, ma ha grana, intensità per fascia e densità di granelli dell'
 2. Spigoli e raccordi riconosciuti su più scale; ogni tratto classificato retta o curva.
 3. Rette per minimi quadrati totali, vertici come intersezione esatta, curve con catene
    di Bézier G1 ottimizzate (errore max ~0.2 px).
-4. Correzione della gamba destra e propagazione della stessa geometria alla versione dust
-   (deformazione thin-plate-spline del campo luminoso, residuo medio 0.03 px).
+4. Lettera resa simmetrica con una trasformazione analitica (shear + correzione della gamba),
+   tratti dritti e spigoli riportati su rette e coordinate esatte, stessa trasformazione
+   applicata al campo luminoso della versione dust.
 5. Polvere ricostruita misurando autocorrelazione, spettro e statistica del rumore dell'originale.
 6. Ogni passaggio verificato rendendo l'SVG in Chromium e confrontandolo con l'immagine.
 

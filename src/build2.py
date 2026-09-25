@@ -76,8 +76,11 @@ def build_path(xy, corners, straight_tol=0.5, trim=0.10, target_err=0.25, kmax=9
             segs.append(('L', v1)); report.append((i, 'line', A['lerr'], 1)); continue
         pts = A['pts'].copy(); pts[0] = v0; pts[-1] = v1
         prev, nxt = arcs[(i-1) % M], arcs[(i+1) % M]
+        if len(pts) < 8:
+            segs.append(('L', v1)); report.append((i, 'line', A['lerr'], 1)); continue
         best = None
-        for K in range(2, kmax+1):
+        kmax_i = max(1, min(kmax, len(pts)//6))
+        for K in range(1, kmax_i+1):
             ctrls, mx, rms = fit_arc(pts, v0, v1, K)
             if best is None or mx < best[1]: best = (ctrls, mx, rms, K)
             if mx < target_err: best = (ctrls, mx, rms, K); break
