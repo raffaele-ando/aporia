@@ -1,83 +1,50 @@
 # Aporia — apertura del sito
 
-Animazione d'ingresso del sito: nero, compare la polvere, arrivano delle folate di vento,
-la polvere si raccoglie nel logo, il logo si sgretola nel vento e resta la home, che per ora
-mostra solo la scritta **Aporia**.
+Animazione d'ingresso del sito, circa 5 secondi: dal nero il vento porta la polvere, che si posa
+e costruisce una A pulita; una raffica la attraversa, solleva la polvere del fiume e la trascina
+nella bandiera (il resto vola via), fino a ottenere il logo dust; l'ultima raffica lo porta via
+e resta la home, che per ora mostra solo la scritta **Aporia**.
 
-Apri `index.html` nel browser: è un file unico (circa 560 KB), senza dipendenze (il logo è incorporato;
-l'unica risorsa esterna è il carattere Italiana da Google Fonts, con ripiego su Didot/Bodoni/serif).
+## File
 
-## Sequenza (circa 5 s)
-
-Il logo dust è una A di polvere in cui il vento ha scavato il fiume e trascinato la polvere a
-destra (la "bandiera"). L'intro racconta proprio questo, in poco tempo:
-
-| tempo | cosa succede |
+| File | Cosa contiene |
 |---|---|
-| 0 – 0,3 s | nero |
-| 0,3 – 1,0 s | la polvere compare dal nero, già mossa dal vento |
-| 0,75 – 2,25 s | una folata la raccoglie e costruisce una **A pulita**, da sinistra a destra |
-| 1,85 – 3,3 s | mentre a destra la A si completa, a sinistra il vento inizia già a scavare il fiume: la polvere si solleva, una parte si posa nella bandiera, il resto vola via a pennacchio. Il risultato è esattamente il logo |
-| 3,5 – 4,4 s | l'ultima folata sgretola il logo da sinistra a destra |
-| 4,3 – 5,05 s | compare la home: "Aporia" |
+| `index.html` | la pagina: video d'apertura, poi la home "Aporia" |
+| `assets/intro-portrait.mp4` / `.webm` | video verticale 1080×1920 (telefoni, tablet in verticale) |
+| `assets/intro-landscape.mp4` / `.webm` | video orizzontale 1920×1080 (computer, tablet in orizzontale) |
+| `intro-canvas.html` | versione precedente, calcolata dal vivo nel browser (tenuta come riferimento) |
+| `preview/` | fotogrammi di controllo (telefono e desktop) |
+| `src/` | script che generano tutto |
 
-Non ci sono pause: sotto le folate soffia sempre un vento di fondo e le fasi si accavallano,
-come un'unica raffica che crea e poi porta via.
+## Perché un video
 
-- Click, tocco o un tasto qualsiasi durante l'intro: si salta subito alla home.
-- Doppio click sulla scritta "Aporia": si rivede l'apertura.
-- Con "riduci movimento" attivo nel sistema: solo dissolvenze (logo → home), niente vento.
-- Su schermi piccoli il vento è scalato alle dimensioni dello schermo.
+La polvere è una vera simulazione fisica fatta in anticipo (`src/sim_video.py`): circa 450.000
+granelli spinti da un vento turbolento (raffiche che attraversano lo schermo più vortici senza
+divergenza, come l'aria vera), ognuno con il suo peso. Nessun telefono potrebbe calcolarla dal vivo,
+ma riprodurre un video lo sa fare qualsiasi dispositivo: fluido ovunque, identico su Android,
+iPhone, iPad e computer. Ogni video pesa circa 2,5 MB (H.264) o 1,7 MB (WebM).
 
-Anteprime dei fotogrammi in `preview/` (`fiume-scavato-dal-vento.png`: la folata che trasforma la A pulita nel logo).
+- La pagina sceglie da sola il video verticale o orizzontale e il formato adatto al browser
+  (H.264 per Safari, iPad, Android, Chrome; WebM VP9 dove H.264 non c'è).
+- La home compare mentre l'ultima polvere si sta ancora disperdendo.
+- Tocco, click o un tasto durante il video: si salta alla home. Doppio click su "Aporia": si rivede.
+- Se il video non parte (per esempio in risparmio energetico su iPhone) si va comunque alla home
+  dopo 2,5 secondi. Con "riduci movimento" attivo si va direttamente alla home.
 
-## Cosa si può regolare
+## Come si rigenera
 
-Tutto in `src/template.html`, in cima allo script:
+1. `python src/render_logo.py` — fotografa il logo dust (`../agora_loghi_svg`).
+2. `python src/prep_morph.py` — prepara la A pulita e la divisione del logo (polvere che resta /
+   polvere che arriva col vento).
+3. `python src/sim_video.py portrait` e `python src/sim_video.py landscape` — simulazione e video
+   (circa 4 minuti ciascuno; `--preview` per una prova veloce a metà risoluzione).
+4. Compressione per il web: vedi i comandi `ffmpeg` in fondo a questo file.
+5. `python src/build.py` — rigenera `index.html` (e `intro-canvas.html`).
 
-- `T`: i tempi di ogni fase (secondi); per allungare o accorciare l'intro basta cambiare questi e `GUSTS`.
-- `GUSTS`: le folate (inizio, durata, forza, angolo, tempo per attraversare lo schermo).
-- `--night`, `--paper` nel CSS: colori del nero e della scritta.
+In `src/sim_video.py` si regolano i tempi (`tc` A pulita, `tv_` raffica del fiume, `te` uscita),
+le raffiche (`GUSTS`), la turbolenza (`OCT`, `amp`) e il numero di granelli.
 
-Dopo una modifica: `python src/build.py` rigenera `index.html`.
-
-## Come funziona
-
-- **Il logo è un'immagine, non un SVG "vivo".** `src/render_logo.py` fotografa il logo dust vero
-  (`../agora_loghi_svg/agora-logo-dust-static.svg`) in immagini pronte. Durante l'animazione non c'è nessun filtro SVG da calcolare.
-  Prima c'era, ed era la causa del blocco sui telefoni (ogni fotogramma ricalcolava decine di
-  filtri) e del tremolio su Safari/iPad, che quei filtri li calcola in modo diverso.
-- **Polvere e vento**: un canvas con qualche migliaio di granelli. Ogni granello segue un campo di
-  turbolenza (rumore) più le folate, che attraversano lo schermo da sinistra a destra. La scia è
-  data dal fotogramma precedente che sbiadisce invece di cancellarsi, come fumo.
-- **Formazione della A pulita**: la A resta invisibile e si "accende" solo dove un granello si è
-  posato (ogni granello, arrivando, lascia uno sbuffo in una maschera di accumulo). I granelli
-  arrivano col vento da sinistra verso destra, quindi la lettera si completa nello stesso verso.
-- **Il vento scava il fiume** (`src/prep_morph.py` prepara tutto in anticipo):
-  - `S` è la A pulita di polvere;
-  - il logo è diviso in `Bstay`, la polvere che nella A c'è già e resta, e `Bmove`, la polvere
-    che arriva col vento (bandiera, bordi chiari del fiume);
-  - circa 2600 granelli vanno da dove il vento solleva la polvere (fiume, ombre) a dove la
-    deposita, abbinati in modo che il vento li porti sempre verso destra; quelli senza posto
-    vengono portati via e si disperdono.
-
-  Nel browser, lungo il fronte della folata la A pulita diventa `Bstay` e i granelli partono.
-  Dove si posano compare `Bmove`, quindi alla fine `S` è diventata esattamente il logo.
-- **Stesso effetto su telefono e desktop**: il vento si adatta allo schermo, ma le folate restano
-  lunghe e setose anche sul telefono.
-- **Uscita**: una maschera con fronte frastagliato scorre sul logo; lungo il fronte ogni punto del
-  logo diventa un granello con un suo peso (i più leggeri volano via prima), quindi la polvere si
-  allunga e si disperde invece di muoversi a blocco.
-- **Granelli spinti dal vento, non su binari**: ogni granello del fiume parte quando la folata lo
-  raggiunge e segue il vento (con il suo peso: i leggeri volano di più); quelli che si posano
-  vengono frenati solo alla fine, verso il loro punto.
-- **Fluidità su ogni dispositivo**:
-  - il tempo dell'animazione avanza al massimo di 1/20 s per fotogramma, quindi su un dispositivo
-    lento rallenta un attimo ma non salta mai delle fasi;
-  - prima di partire (a schermo nero) una prova di velocità sceglie risoluzione e quantità di
-    polvere: durante l'intro non si ridimensiona mai nulla;
-  - se poi il dispositivo fatica, la polvere in più sfuma piano invece di sparire di colpo;
-  - le immagini del logo vengono decodificate all'avvio, a schermo ancora nero.
-
-Se cambia il logo: `python src/render_logo.py` (fotografa il logo), `python src/prep_morph.py`
-(A pulita, divisione e granelli) e poi `python src/build.py`.
+```
+ffmpeg -i master.mp4 -c:v libx264 -preset veryslow -crf 29 -pix_fmt yuv420p -movflags +faststart -an intro-portrait.mp4
+ffmpeg -i master.mp4 -c:v libvpx-vp9 -b:v 0 -crf 52 -row-mt 1 -pix_fmt yuv420p -an intro-portrait.webm
+```

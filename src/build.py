@@ -13,6 +13,15 @@ style_end = rest.index('</style>') + len('</style>')
 page = ('<!doctype html>\n<html lang="it">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         + head + rest[:style_end] + '\n</head>\n<body>' + rest[style_end:] + '</body>\n</html>\n')
-(root/'index.html').write_text(page)
+(root/'intro-canvas.html').write_text(page)
 if len(sys.argv) > 1: pathlib.Path(sys.argv[1]).write_text(body)
-print('index.html', len(page)//1024, 'KB')
+print('intro-canvas.html', len(page)//1024, 'KB')
+
+# pagina principale: il video (src/sim_video.py) e la home
+vp = (here/'video_page.html').read_text()
+te = vp.index('</title>') + len('</title>'); r2 = vp[te:]; se = r2.index('</style>') + len('</style>')
+(root/'index.html').write_text('<!doctype html>\n<html lang="it">\n<head>\n<meta charset="utf-8">\n'
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+    + vp[:te] + r2[:se] + '\n</head>\n<body>' + r2[se:] + '</body>\n</html>\n')
+if len(sys.argv) > 2: pathlib.Path(sys.argv[2]).write_text(vp)
+print('index.html', len(vp)//1024, 'KB + video in assets/')
