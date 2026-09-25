@@ -7,22 +7,20 @@ mostra solo la scritta **Aporia**.
 Apri `index.html` nel browser: è un file unico (circa 560 KB), senza dipendenze (il logo è incorporato;
 l'unica risorsa esterna è il carattere Italiana da Google Fonts, con ripiego su Didot/Bodoni/serif).
 
-## Sequenza (circa 11 s)
+## Sequenza (circa 5 s)
 
 Il logo dust è una A di polvere in cui il vento ha scavato il fiume e trascinato la polvere a
-destra (la "bandiera"). L'intro racconta proprio questo:
+destra (la "bandiera"). L'intro racconta proprio questo, in poco tempo:
 
 | tempo | cosa succede |
 |---|---|
-| 0 – 0,7 s | nero |
-| 0,7 – 2,2 s | la polvere compare dal nero, sospesa e in lento movimento |
-| 1,5 s | prima folata di vento |
-| 2,5 – 4,7 s | seconda folata: la polvere si posa granello per granello e costruisce una **A pulita**, da sinistra a destra |
-| 4,7 – 5,0 s | la A pulita resta un istante |
-| 5,0 – 7,2 s | una folata attraversa la lettera: dove passa, la polvere del fiume e delle ombre si solleva e vola a destra; una parte si deposita nella bandiera e sui bordi del fiume, il resto viene portato via. Il risultato è esattamente il logo |
-| 7,2 – 8,3 s | il logo resta |
-| 8,3 – 9,8 s | ultima folata: il logo si sgretola da sinistra a destra e la polvere vola via |
-| 9,6 – 10,9 s | compare la home: "Aporia" |
+| 0 – 0,15 s | nero |
+| 0,15 – 0,9 s | la polvere compare dal nero; prima folata |
+| 0,75 – 2,0 s | seconda folata: la polvere si posa e costruisce una **A pulita**, da sinistra a destra |
+| 2,2 – 3,4 s | una folata attraversa la lettera: la polvere del fiume e delle ombre si solleva e vola a destra, una parte si deposita nella bandiera, il resto si disperde. Il risultato è esattamente il logo |
+| 3,4 – 3,75 s | il logo resta |
+| 3,75 – 4,6 s | ultima folata: il logo si sgretola da sinistra a destra |
+| 4,45 – 5,2 s | compare la home: "Aporia" |
 
 - Click, tocco o un tasto qualsiasi durante l'intro: si salta subito alla home.
 - Doppio click sulla scritta "Aporia": si rivede l'apertura.
@@ -35,7 +33,7 @@ Anteprime dei fotogrammi in `preview/` (`fiume-scavato-dal-vento.png`: la folata
 
 Tutto in `src/template.html`, in cima allo script:
 
-- `T`: i tempi di ogni fase (secondi).
+- `T`: i tempi di ogni fase (secondi); per allungare o accorciare l'intro basta cambiare questi e `GUSTS`.
 - `GUSTS`: le folate (inizio, durata, forza, angolo, tempo per attraversare lo schermo).
 - `--night`, `--paper` nel CSS: colori del nero e della scritta.
 
