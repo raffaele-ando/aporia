@@ -50,11 +50,21 @@ def warp_raster(A, inv):
     from scipy.ndimage import map_coordinates
     return map_coordinates(A, [inv[..., 1], inv[..., 0]], order=1, mode='constant')
 
-def levels(Fw, N=28, gamma=1.7, eps=1.6, min_area=120):
-    ts = [(k/N)**gamma for k in range(1, N)] + [1.01]; out = []
+def levels(Fw, N=48, eps=1.6, min_area=120):
+    # soglie fitte ai due estremi (ombre e luci): niente gradini dove la luce cambia piano
+    ts = [0.5 - 0.5*np.cos(np.pi*k/N) for k in range(1, N)] + [1.01]; out = []
     for k in range(len(ts)-1):
         d = level_paths(Fw, ts[k], min_area=min_area, eps=eps, prec=1)
         if d: out.append(((ts[k]+ts[k+1])/2, d))
+    return out
+
+def soft_levels(Sw, N=8):
+    """morbidezza del bordo (0 = netto, 1 = decide solo la luce) come tracciati annidati"""
+    out = []
+    for k in range(1, N+1):
+        t = (k - 0.5)/N
+        d = level_paths(gaussian_filter(Sw, 3), t, min_area=150, eps=1.5, prec=1)
+        if d: out.append((min(1.0, t + 0.5/N), d))
     return out
 
 def zone_path(zone_w):
@@ -66,11 +76,12 @@ if __name__ == '__main__':
     G, S, zone = build_field()
     inv = inverse_map()
     zd = zone_path(warp_raster(zone*1., inv))
+    sl = soft_levels(warp_raster(S, inv))
     Fw = warp_raster(gaussian_filter(median_filter(G, size=5), 3.0), inv)
     lv = levels(Fw)
     # il taglio del fiume scende sotto la base: la base resta netta, senza filo chiaro
     open_d = re.sub(r'(-?\d+\.?\d*) 966\.42', lambda m: f'{m.group(1)} 990', V.open_d)
     kl = pickle.load(open('src/kmap_v4_levels.pkl', 'rb'))
-    pickle.dump(dict(hull=V.hull_d, open=open_d, zone=zd, levels=lv, glows=V.gw, klevels=kl, k_bg=0.87),
+    pickle.dump(dict(hull=V.hull_d, open=open_d, zone=zd, levels=lv, glows=V.gw, klevels=kl, k_bg=0.87, slevels=sl),
                 open('src/dust_v4_layers.pkl', 'wb'))
     print(len(lv), 'livelli')

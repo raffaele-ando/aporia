@@ -7,7 +7,7 @@ import emit_v4 as E
 D = pickle.load(open('src/dust_v4_layers.pkl', 'rb'))
 def build(P=E.P4, animated=False, **kw):
     return E.emit(D['hull'], D['open'], D['zone'], D['levels'], D['glows'], D['klevels'],
-                  k_bg=D['k_bg'], P=P, animated=animated, **kw)
+                  k_bg=D['k_bg'], P=P, animated=animated, slevels=D.get('slevels', ()), **kw)
 render, metrics, REF = V.render, V.metrics, V.REF
 if __name__ == '__main__':
     over = json.loads(sys.argv[1]) if len(sys.argv) > 1 else {}

@@ -79,10 +79,13 @@ l'angolo, o sostituirlo con un gradiente radiale o conico tuo.
 
 Strati, tutti vettoriali:
 
-1. **Campo luminoso** (`#agoraField`): 27 tracciati annidati (isolivelli), più fitti negli
-   scuri così le sfumature non fanno gradini, ammorbiditi da `#agoraSoften`. È la "luce" del logo.
-2. **Sagoma** (`#agoraSurface`): taglia la luce solo dove il bordo della A è netto (lati, cima,
-   base). Nel fiume e nella bandiera non taglia: lì la luce sfuma da sola come nell'originale.
+1. **Campo luminoso** (`#agoraFieldRaw`): 45 tracciati annidati (isolivelli), fitti sia nelle
+   ombre sia nei bianchi così le sfumature non fanno gradini, ammorbiditi da `#agoraSoften`.
+   È la "luce" del logo.
+2. **Sagoma** (`#agoraEdgeSource` → `#agoraSurface`): la lettera (rosso) più una mappa di
+   morbidezza del bordo (verde). Il filtro `#agoraEdge` rende il bordo netto su lati, cima e base
+   e sempre più sfumato verso fiume e bandiera, senza salti: dove il lato della cima entra
+   nella bandiera il bordo curva e si scioglie piano, invece di fare un angolo.
 3. **Alone** (`#agoraGlowField`): la frangia luminosa che esce dalla sagoma, sfocata da `#agoraBloom`.
 4. **Mappe** (`#agoraGrainMap`, `#agoraDragMap`): dicono al filtro quanta grana mettere e dove
    la polvere è trascinata. L'intensità è misurata sull'originale: grana piena sul corpo della A,
@@ -105,6 +108,8 @@ Strati, tutti vettoriali:
 | `#agoraFlowNoise` `baseFrequency` | scala del vortice di flusso |
 | `#agoraGrainShift` `dx`/`dy` · `#agoraStreakShift` `dx` | scorrimento di grana e scie |
 | `#agoraTone` | contrasto ed esposizione del chiaroscuro |
+| `#agoraHighlight` `tableValues` | quanta polvere per fascia di luce, dal nero al bianco: sui bianchi si dirada piano |
+| `#agoraEdge` / `#agoraEdgeShape` `stdDeviation` | morbidezza del bordo, dal netto (0.6) al più sfumato |
 | `#agoraSoften` / `#agoraBloom` `stdDeviation` | morbidezza della luce · diffusione dell'alone |
 
 ### Animazioni
@@ -137,14 +142,14 @@ Render in Chromium alla stessa risoluzione delle immagini, confronto pixel per p
 **Logo pulito** — errore medio **0.67/255** (0.26%), IoU **0.997** sul tracciato fedele;
 la versione corretta se ne discosta dove la lettera è stata resa simmetrica (voluto).
 
-**Logo dust**: errore medio **3,7/255** (1,5%) rispetto all'immagine; la differenza in più è
+**Logo dust**: errore medio **3,6/255** (1,4%) rispetto all'immagine; la differenza in più è
 la correzione voluta della lettera. Luce dopo sfocatura (σ 8): scarto quadratico **0,034** su
 scala 0-1. Grana per fascia di luminosità (deviazione standard del dettaglio fine):
 
 | luminosità | 0.1 | 0.2 | 0.4 | 0.5 | 0.7 | 0.8 | 0.95 |
 |---|---|---|---|---|---|---|---|
 | originale | 0.073 | 0.140 | 0.190 | 0.179 | 0.140 | 0.077 | 0.021 |
-| SVG | 0.057 | 0.121 | 0.174 | 0.164 | 0.127 | 0.097 | 0.046 |
+| SVG | 0.059 | 0.126 | 0.179 | 0.165 | 0.124 | 0.099 | 0.044 |
 
 La polvere è generata proceduralmente (per questo si muove e si ricolora): non è una copia
 pixel per pixel, ma ha grana, intensità per zona e scie dell'originale.
@@ -163,6 +168,14 @@ pixel per pixel, ma ha grana, intensità per zona e scie dell'originale.
   piena sul corpo della A e diventa polvere liscia, trascinata a scie lungo il fiume, come
   nell'originale. I granelli escono dalla lettera solo dove la luce sfuma, non dai bordi netti.
 - `--dust: 0` ora dà davvero la superficie pulita (prima faceva sparire il logo).
+- **Sfumature che finivano di colpo** (gamba sinistra, cima): i livelli di luce erano radi nei
+  bianchi e facevano "terrazze" con un bordo; ora sono fitti anche lì e la polvere si dirada
+  gradualmente verso il bianco.
+- **Angolo al posto della curva** dove il lato della cima entra nella bandiera: il bordo passava
+  di colpo da netto a sfumato; ora la morbidezza cambia gradualmente lungo il contorno.
+- **Bordino scuro nella versione su fondo chiaro**: la luce veniva tagliata due volte dallo
+  stesso bordo sfumato e al centro della sfumatura restava un filo scuro. Ora il bordo lo
+  decide solo la sagoma. I bordi esterni sono netti come nell'originale.
 
 ## Come sono stati ricostruiti
 
