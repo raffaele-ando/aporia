@@ -41,15 +41,18 @@ Dopo una modifica: `python src/build.py` rigenera `index.html`.
 
 - **Il logo è un'immagine, non un SVG "vivo".** `src/render_logo.py` fotografa il logo dust vero
   (`../agora_loghi_svg/agora-logo-dust-static.svg`) in due fotogrammi con grana diversa, che
-  nell'intro si alternano piano. Durante l'animazione non c'è nessun filtro SVG da calcolare.
+  nell'intro si alternano piano, più la sua scia di vento. Durante l'animazione non c'è nessun filtro SVG da calcolare.
   Prima c'era, ed era la causa del blocco sui telefoni (ogni fotogramma ricalcolava decine di
   filtri) e del tremolio su Safari/iPad, che quei filtri li calcola in modo diverso.
 - **Polvere e vento**: un canvas con qualche migliaio di granelli. Ogni granello segue un campo di
   turbolenza (rumore) più le folate, che attraversano lo schermo da sinistra a destra. La scia è
   data dal fotogramma precedente che sbiadisce invece di cancellarsi, come fumo.
 - **Formazione del logo**: i punti di arrivo sono presi dall'immagine del logo (più punti dove è
-  chiaro). Metà dei granelli viene dall'aria, metà arriva con la folata. Quando si posano diventano
-  puntini (senza scia), mentre il logo compare da copie sfumate spostate dal vento che convergono.
+  chiaro). Metà dei granelli viene dall'aria, metà arriva con la folata. Il logo arriva col vento
+  insieme alla sua scia (un terzo fotogramma pre-renderizzato: sfocatura di movimento rigata) e,
+  fermandosi, la scia si ritira e il logo diventa nitido.
+- **Stesso effetto su telefono e desktop**: il vento si adatta allo schermo, ma le folate restano
+  lunghe e setose anche sul telefono.
 - **Uscita**: una maschera con fronte frastagliato scorre sul logo; lungo il fronte ogni punto del
   logo diventa un granello con un suo peso (i più leggeri volano via prima), quindi la polvere si
   allunga e si disperde invece di muoversi a blocco.
