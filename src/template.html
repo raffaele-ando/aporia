@@ -1,0 +1,397 @@
+<title>Aporia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&display=swap">
+<style>
+  /* un solo mondo visivo, scuro per scelta: fondo e colori sempre espliciti */
+  :root {
+    color-scheme: dark;
+    --night: #050506;      /* nero dell'apertura, leggermente caldo */
+    --dust: 244, 241, 235; /* colore della polvere (rgb) */
+    --paper: #ece8e1;      /* testo della home */
+    --home-bg: #070708;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--night); color: var(--paper); overflow: hidden; }
+
+  #home {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: var(--home-bg); padding-inline: 16px;
+  }
+  #home h1 {
+    margin: 0; font-family: "Italiana", "Didot", "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+    font-weight: 400; font-size: clamp(56px, 13vw, 200px); line-height: 1;
+    letter-spacing: 0.16em; margin-right: -0.16em; /* compensa lo spazio dopo l'ultima lettera */
+    color: var(--paper); text-wrap: balance;
+    opacity: 0; filter: blur(10px);
+    cursor: default; user-select: none;
+  }
+
+  #intro { position: fixed; inset: 0; background: var(--night); overflow: hidden; }
+  #intro.gone { display: none; }
+  #dust { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #logo {
+    position: absolute; left: 50%; top: 50%;
+    width: min(96vw, 90vh); aspect-ratio: 1; max-width: 100%;
+    transform: translate(-50%, -50%);
+    opacity: 0; pointer-events: none;
+  }
+  #logo svg { display: block; width: 100%; height: 100%; }
+</style>
+
+<main id="home" aria-live="polite">
+  <h1 id="homeTitle">Aporia</h1>
+</main>
+
+<div id="intro" role="img" aria-label="Aporia">
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div id="logo" aria-hidden="true">
+__LOGO__
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const intro = document.getElementById('intro');
+  const cv = document.getElementById('dust');
+  const ctx = cv.getContext('2d');
+  const logo = document.getElementById('logo');
+  const svg = logo.querySelector('svg');
+  const disp = svg.querySelector('#agoraDisplace');
+  const title = document.getElementById('homeTitle');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- tempi (secondi) --------------------------------------------------
+  const T = {
+    dustIn: [0.7, 2.2],     // la polvere compare dal nero
+    form: [3.1, 4.5],       // il logo si forma
+    hold: [4.5, 5.8],
+    exit: [5.8, 7.3],       // il vento lo porta via, da sinistra a destra
+    home: [7.1, 8.4],
+    end: 8.6,
+  };
+  // folate di vento: inizio, durata, forza, angolo (gradi), tempo per attraversare lo schermo
+  const GUSTS = [
+    { t0: 1.5, dur: 1.2, str: 0.9, ang: -6, cross: 0.55 },
+    { t0: 2.5, dur: 1.5, str: 1.5, ang: -12, cross: 0.45 },
+    { t0: 4.9, dur: 0.9, str: 0.35, ang: 4, cross: 0.6 },
+    { t0: 5.6, dur: 2.6, str: 1.15, ang: -8, cross: 0.5 },
+  ];
+
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, t) => { const x = clamp((t - a)/(b - a), 0, 1); return x*x*(3 - 2*x); };
+  const easeOut = x => 1 - Math.pow(1 - x, 3);
+  const easeInOut = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3)/2;
+
+  // ---- rumore per le turbolenze --------------------------------------------
+  function hash(x, y) {
+    let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  }
+  function noise(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const u = xf*xf*(3 - 2*xf), v = yf*yf*(3 - 2*yf);
+    const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    return a + (b - a)*u + (c - a)*v + (a - b - c + d)*u*v;
+  }
+
+  // ---- misure -------------------------------------------------------------
+  let W = 0, H = 0, DPR = 1, VS = 1, box = { x: 0, y: 0, s: 1 };   // VS: scala delle velocità
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    VS = clamp(Math.min(W, H*1.3)/1300, 0.3, 1.15);   // su schermi piccoli il vento è proporzionato
+    cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const r = logo.getBoundingClientRect();
+    box = { x: r.left, y: r.top, s: r.width/1254 };
+    ctx.fillStyle = '#050506'; ctx.fillRect(0, 0, W, H);
+  }
+  window.addEventListener('resize', resize);
+
+  // ---- punti del logo (la polvere si posa dove il logo è chiaro) ------------
+  let targets = [];            // {u, v, l} in unità del viewBox 1254
+  function sampleFrom(data, n, S) {
+    const pts = [];
+    let tries = 0;
+    while (pts.length < 2600 && tries < 400000) {
+      tries++;
+      const x = Math.random()*n, y = Math.random()*n;
+      const i = ((y|0)*n + (x|0))*4;
+      const l = data[i + 3] ? data[i]/255 : 0;
+      if (Math.random() < l*l) pts.push({ u: x*S, v: y*S, l });
+    }
+    return pts.sort((a, b) => a.u - b.u);
+  }
+  function sampleLogo() {
+    const n = 320, S = 1254/n;
+    const off = document.createElement('canvas'); off.width = off.height = n;
+    const oc = off.getContext('2d');
+    const fallback = () => {       // sagoma della lettera, se l'immagine non si può leggere
+      oc.clearRect(0, 0, n, n); oc.save(); oc.scale(1/S, 1/S); oc.fillStyle = '#fff';
+      svg.querySelectorAll('#agoraEdgeLetter path').forEach((p, k) => {
+        oc.globalCompositeOperation = k === 0 ? 'source-over' : 'destination-out';
+        oc.fill(new Path2D(p.getAttribute('d')));
+      });
+      oc.restore();
+      targets = sampleFrom(oc.getImageData(0, 0, n, n).data, n, S);
+    };
+    try {
+      const src = new XMLSerializer().serializeToString(svg);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          oc.fillStyle = '#000'; oc.fillRect(0, 0, n, n); oc.drawImage(img, 0, 0, n, n);
+          const d = oc.getImageData(0, 0, n, n).data;
+          for (let i = 0; i < d.length; i += 4) d[i + 3] = 255;
+          targets = sampleFrom(d, n, S);
+          if (targets.length < 400) fallback();
+        } catch (e) { fallback(); }
+      };
+      img.onerror = fallback;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src);
+    } catch (e) { fallback(); }
+  }
+
+  // ---- maschera d'uscita: fronte frastagliato che scorre da sinistra a destra ----
+  const RAG = new Float32Array(256);        // scarto del fronte per riga (frazione del riquadro)
+  function buildExitMask() {
+    const w = 1024, h = 256, c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'), img = g.createImageData(w, h), d = img.data;
+    for (let y = 0; y < h; y++) {
+      RAG[y] = (noise(y*0.035, 3.1) - 0.5)*0.12 + (noise(y*0.11, 7.7) - 0.5)*0.05 + (noise(y*0.4, 1.3) - 0.5)*0.018;
+      const front = (0.5 + RAG[y]/2)*w;     // l'immagine è larga 2 riquadri: il fronte sta a metà
+      for (let x = 0; x < w; x++) {
+        const grain = (hash(x, y) - 0.5)*26 + (noise(x*0.08, y*0.08) - 0.5)*30;
+        const v = clamp((x - front + grain + 14)/28, 0, 1);
+        d[(y*w + x)*4 + 3] = Math.round(v*v*(3 - 2*v)*255);
+      }
+    }
+    g.putImageData(img, 0, 0);
+    const url = `url(${c.toDataURL('image/png')})`;
+    for (const k of ['maskImage', 'webkitMaskImage']) logo.style[k] = url;
+    for (const k of ['maskSize', 'webkitMaskSize']) logo.style[k] = '200% 100%';
+    for (const k of ['maskRepeat', 'webkitMaskRepeat']) logo.style[k] = 'no-repeat';
+    const p0 = `${(-0.9*box.s*1254).toFixed(1)}px 0`;
+    logo.style.webkitMaskPosition = p0; logo.style.maskPosition = p0;
+  }
+
+  // ---- particelle -----------------------------------------------------------
+  const ambient = [], formers = [], blown = [];
+  function makeAmbient(count) {
+    for (let i = 0; i < count; i++) ambient.push({
+      x: Math.random()*W, y: Math.random()*H, vx: 0, vy: 0,
+      r: Math.random() < 0.85 ? 0.6 + Math.random()*0.7 : 1.3 + Math.random()*0.9,
+      a: 0.18 + Math.random()*0.55, delay: Math.random()*1.2,
+    });
+  }
+
+  // vento nel punto (x,y) al tempo t: somma delle folate + turbolenza
+  function gustAt(x, t) {
+    let gx = 0, gy = 0, g = 0;
+    for (const G of GUSTS) {
+      const local = t - G.t0 - (x/W)*G.cross;       // la folata attraversa lo schermo
+      if (local <= 0 || local >= G.dur) continue;
+      const e = Math.pow(Math.sin(Math.PI*local/G.dur), 2)*G.str;
+      const a = G.ang*Math.PI/180;
+      gx += Math.cos(a)*e; gy += Math.sin(a)*e; g += e;
+    }
+    return [gx, gy, g];
+  }
+  function flow(x, y, t, out) {
+    const [gx, gy, g] = gustAt(x, t);
+    const n = noise(x*0.0032 + t*0.35, y*0.0032 - t*0.1);
+    const ang = n*Math.PI*4;
+    const turb = 14 + g*170;                 // la folata rende l'aria più turbolenta
+    out[0] = (gx*760 + Math.cos(ang)*turb + 6)*VS;
+    out[1] = (gy*760 + Math.sin(ang)*turb - 3)*VS;
+    out[2] = g;
+    return out;
+  }
+
+  const buckets = 10;
+  const segs = Array.from({ length: buckets*2 }, () => []);
+  function queue(x0, y0, x1, y1, a, big) {
+    if (a <= 0.01) return;
+    const b = Math.min(buckets - 1, (a*buckets)|0) + (big ? buckets : 0);
+    segs[b].push(x0, y0, x1, y1);
+  }
+  function flush() {
+    ctx.lineCap = 'round';
+    for (let k = 0; k < segs.length; k++) {
+      const s = segs[k]; if (!s.length) continue;
+      const big = k >= buckets, a = ((k % buckets) + 0.5)/buckets;
+      ctx.strokeStyle = `rgba(244,241,235,${a.toFixed(3)})`;
+      ctx.lineWidth = big ? 1.9 : 1.05;
+      ctx.beginPath();
+      for (let i = 0; i < s.length; i += 4) { ctx.moveTo(s[i], s[i + 1]); ctx.lineTo(s[i + 2], s[i + 3]); }
+      ctx.stroke(); s.length = 0;
+    }
+  }
+
+  let formed = false, emitIdx = 0;
+  const f = [0, 0, 0];
+
+  function step(t, dt) {
+    // scia: ogni fotogramma si scurisce un po' invece di cancellare, come fumo
+    const trail = 0.24 + 0.25*smooth(T.home[0], T.end, t);
+    ctx.fillStyle = `rgba(5,5,6,${trail})`; ctx.fillRect(0, 0, W, H);
+
+    const dustA = smooth(T.dustIn[0], T.dustIn[1], t)
+                * (1 - 0.55*smooth(T.form[0], T.form[1], t))
+                * (1 - smooth(T.exit[1] - 0.4, T.home[1], t));
+
+    // polvere nell'aria
+    for (const p of ambient) {
+      flow(p.x, p.y, t, f);
+      const k = 1 - Math.exp(-dt*(1.5 + f[2]*5));
+      p.vx += (f[0] - p.vx)*k; p.vy += (f[1] - p.vy)*k;
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      // uscita dallo schermo: rinasce in un punto qualsiasi, in dissolvenza (niente "muri" al bordo)
+      if (p.x > W + 30 || p.x < -30 || p.y > H + 30 || p.y < -30) {
+        p.x = Math.random()*W; p.y = Math.random()*H; p.born = t;
+        flow(p.x, p.y, t, f); p.vx = f[0]; p.vy = f[1];
+      }
+      const a = p.a*dustA*smooth(T.dustIn[0] + p.delay, T.dustIn[0] + p.delay + 0.8, t)
+              * (p.born ? smooth(p.born, p.born + 0.6, t) : 1);
+      const sp = Math.hypot(p.vx, p.vy), len = Math.min(4 + 22*VS, 0.4 + sp*0.028);
+      queue(p.x - p.vx/sp*len || p.x, p.y - p.vy/sp*len || p.y, p.x, p.y, a, p.r > 1.2);
+    }
+
+    // la seconda folata porta la polvere che forma il logo
+    if (!formed && t >= GUSTS[1].t0 + 0.15 && targets.length) {
+      formed = true;
+      // la polvere già sospesa nell'aria (e un po' portata dalla folata) si raccoglie nel logo
+      const n = Math.min(1400, targets.length);
+      for (let i = 0; i < n; i++) {
+        const tg = targets[(i*targets.length/n)|0];
+        const fromAir = i % 2 === 0 && ambient.length > 200;
+        const q = fromAir ? ambient.splice((Math.random()*ambient.length)|0, 1)[0] : null;
+        formers.push(q ? { tg, x: q.x, y: q.y, vx: q.vx, vy: q.vy, a: 0.3 + tg.l*0.6, born: 0 }
+                       : { tg, x: Math.random()*W*0.8 - W*0.15, y: Math.random()*H, vx: 300*VS, vy: 0,
+                           a: 0.3 + tg.l*0.6, born: t });
+      }
+    }
+    const pull = smooth(T.form[0] - 0.6, T.form[0] + 0.7, t);
+    const fade = 1 - smooth(T.form[0] + 0.3, T.form[1], t);
+    for (const p of formers) {
+      if (fade <= 0) break;
+      const tx = box.x + p.tg.u*box.s, ty = box.y + p.tg.v*box.s;
+      flow(p.x, p.y, t, f);
+      const k = 1 - Math.exp(-dt*3);
+      p.vx += (f[0]*(1 - pull) - p.vx)*k; p.vy += (f[1]*(1 - pull) - p.vy)*k;
+      // si posa senza rimbalzi: avvicinamento smorzato verso il suo punto del logo
+      const ox = p.x, oy = p.y, g = 1 - Math.exp(-dt*6*pull);
+      p.x += p.vx*dt + (tx - p.x)*g; p.y += p.vy*dt + (ty - p.y)*g;
+      const appear = p.born ? smooth(p.born, p.born + 0.6, t) : 1;
+      let dx = p.x - ox, dy = p.y - oy; const L = Math.hypot(dx, dy), cap = 2.5 + 5*VS;
+      if (L > cap) { dx *= cap/L; dy *= cap/L; }                // granelli che si posano, non scie
+      queue(p.x - dx, p.y - dy, p.x, p.y, p.a*fade*appear, false);
+    }
+
+    // logo: dalla polvere alla forma
+    const fp = clamp((t - T.form[0])/(T.form[1] - T.form[0]), 0, 1);
+    let scale = 90*(1 - easeOut(fp));
+    if (t > T.hold[0]) scale = 1.8*Math.sin((t - T.hold[0])*2.2)**2;
+    // uscita: il vento lo sgretola da sinistra a destra
+    const xp = clamp((t - T.exit[0])/(T.exit[1] - T.exit[0]), 0, 1);
+    if (xp > 0) {
+      const e = easeInOut(xp);
+      scale += 16*e;
+      const S = box.s*1254, fx = 0.1 + 0.8*e;                     // fronte, in frazione del riquadro
+      const pos = `${(S*(-0.9 + 0.8*e)).toFixed(1)}px 0`;
+      logo.style.webkitMaskPosition = pos; logo.style.maskPosition = pos;
+      for (let i = emitIdx; i < targets.length; i++) {
+        const tg = targets[i];
+        if (tg.gone) continue;
+        const row = Math.min(RAG.length - 1, (tg.v/1254*RAG.length)|0);
+        if (tg.u/1254 > fx + RAG[row]) { if (tg.u/1254 > fx + 0.2) break; continue; }
+        tg.gone = true; if (i === emitIdx) emitIdx++;
+        blown.push({ x: box.x + tg.u*box.s, y: box.y + tg.v*box.s,
+                     vx: (30 + Math.random()*140)*VS, vy: (-70 + Math.random()*110)*VS,
+                     w: 0.35 + Math.random()*Math.random()*2.6,     // peso: i granelli leggeri volano via prima
+                     life: 1.4 + Math.random()*1.6, age: 0, a: 0.18 + tg.l*0.5, big: tg.l > 0.85 && Math.random() < 0.25 });
+      }
+    }
+    disp.setAttribute('scale', scale.toFixed(2));
+    logo.style.opacity = (easeOut(fp)*(t < T.exit[1] ? 1 : 0)).toFixed(3);
+
+    for (let i = blown.length - 1; i >= 0; i--) {
+      const p = blown[i];
+      p.age += dt; if (p.age > p.life) { blown.splice(i, 1); continue; }
+      flow(p.x, p.y, t, f);
+      const k = 1 - Math.exp(-dt*p.w);
+      p.vx += (f[0] - p.vx)*k; p.vy += (f[1]*1.6 - p.vy)*k;
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      const sp = Math.hypot(p.vx, p.vy) || 1, len = Math.min(4 + 26*VS, 0.5 + sp*0.035);
+      const a = p.a*(1 - p.age/p.life)*Math.min(1, p.age*8);
+      queue(p.x - p.vx/sp*len, p.y - p.vy/sp*len, p.x, p.y, a, p.big);
+    }
+    flush();
+
+    // home
+    const hp = easeOut(clamp((t - T.home[0])/(T.home[1] - T.home[0]), 0, 1));
+    title.style.opacity = hp.toFixed(3);
+    title.style.filter = `blur(${(10*(1 - hp)).toFixed(2)}px)`;
+    title.style.letterSpacing = (0.42 - 0.26*hp).toFixed(3) + 'em';
+    title.style.marginRight = '-' + (0.42 - 0.26*hp).toFixed(3) + 'em';
+    intro.style.opacity = (1 - smooth(T.home[0] + 0.1, T.end, t)).toFixed(3);
+  }
+
+  // ---- regia ----------------------------------------------------------------
+  let start = 0, last = 0, raf = 0, running = false;
+  function frame(now) {
+    if (!start) { start = now; last = now; }
+    const t = (now - start)/1000, dt = Math.min(0.05, (now - last)/1000); last = now;
+    step(t, dt);
+    if (t < T.end) raf = requestAnimationFrame(frame); else finish();
+  }
+  function finish() {
+    cancelAnimationFrame(raf); running = false;
+    intro.classList.add('gone');
+    title.style.opacity = '1'; title.style.filter = 'none';
+    title.style.letterSpacing = '0.16em'; title.style.marginRight = '-0.16em';
+  }
+  function skip() {                   // click o tasto: salta alla home
+    if (!running) return;
+    running = false; cancelAnimationFrame(raf);
+    intro.style.transition = 'opacity .45s ease'; intro.style.opacity = '0';
+    title.style.transition = 'opacity .6s ease, filter .6s ease, letter-spacing .6s ease, margin .6s ease';
+    requestAnimationFrame(() => { title.style.opacity = '1'; title.style.filter = 'none';
+      title.style.letterSpacing = '0.16em'; title.style.marginRight = '-0.16em'; });
+    setTimeout(() => { intro.classList.add('gone'); intro.style.transition = ''; title.style.transition = ''; }, 500);
+  }
+  function play() {
+    cancelAnimationFrame(raf);
+    intro.classList.remove('gone'); intro.style.opacity = '1';
+    title.style.opacity = '0'; title.style.filter = 'blur(10px)';
+    logo.style.opacity = '0';
+    ambient.length = formers.length = blown.length = 0; formed = false; emitIdx = 0;
+    targets.forEach(tg => { tg.gone = false; });
+    resize(); buildExitMask();
+    makeAmbient(Math.round(clamp(W*H/420, 900, 3200)));
+    start = 0; running = true;
+    if (reduce) {                     // movimento ridotto: solo dissolvenze
+      disp.setAttribute('scale', '0');
+      logo.style.transition = 'opacity .7s ease'; intro.style.transition = 'opacity .7s ease';
+      title.style.transition = 'opacity .7s ease, filter .7s ease';
+      requestAnimationFrame(() => { logo.style.opacity = '1'; });
+      setTimeout(() => { intro.style.opacity = '0'; title.style.opacity = '1'; title.style.filter = 'none';
+        title.style.letterSpacing = '0.16em'; title.style.marginRight = '-0.16em'; }, 1900);
+      setTimeout(() => { intro.classList.add('gone'); running = false; }, 2700);
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  intro.addEventListener('pointerdown', skip);
+  window.addEventListener('keydown', e => { if (running && !e.metaKey && !e.ctrlKey) skip(); });
+  title.addEventListener('dblclick', () => { if (!running) play(); });   // doppio click: rivedi l'apertura
+
+  resize();
+  sampleLogo();
+  play();
+})();
+</script>
