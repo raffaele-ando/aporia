@@ -43,8 +43,9 @@
 <script>
 (() => {
   'use strict';
-  // il logo è già "fotografato" (due fotogrammi con grana diversa): niente filtri SVG da
-  // calcolare durante l'animazione, quindi fluido anche su telefoni vecchi e identico su Safari
+  // immagini già preparate (src/prep_morph.py): la A pulita di polvere (S) e il logo diviso in
+  // polvere che resta (Bstay) e polvere portata dal vento (Bmove), più i granelli che il vento
+  // solleva dal fiume. Nessun filtro SVG durante l'animazione: fluido e identico ovunque.
   const LOGO = __LOGO_JSON__;
 
   const intro = document.getElementById('intro');
@@ -56,18 +57,18 @@
   // ---- tempi (secondi) --------------------------------------------------
   const T = {
     dustIn: [0.7, 2.2],     // la polvere compare dal nero
-    form: [3.1, 4.5],       // il logo si forma
-    hold: [4.5, 5.8],
-    exit: [5.8, 7.3],       // il vento lo porta via, da sinistra a destra
-    home: [7.1, 8.4],
-    end: 8.6,
+    form: [3.1, 4.5],       // la polvere costruisce la A pulita
+    carve: [5.0, 7.2],      // una folata scava il fiume e trascina la polvere nella bandiera
+    exit: [8.3, 9.8],       // il vento porta via il logo, da sinistra a destra
+    home: [9.6, 10.9],
+    end: 11.1,
   };
   // folate di vento: inizio, durata, forza, angolo (gradi), tempo per attraversare lo schermo
   const GUSTS = [
     { t0: 1.5, dur: 1.2, str: 0.9, ang: -6, cross: 0.55 },
     { t0: 2.5, dur: 1.5, str: 1.5, ang: -12, cross: 0.45 },
-    { t0: 4.9, dur: 0.9, str: 0.35, ang: 4, cross: 0.6 },
-    { t0: 5.6, dur: 2.6, str: 1.15, ang: -8, cross: 0.5 },
+    { t0: 4.75, dur: 2.3, str: 1.2, ang: -3, cross: 0.55 },
+    { t0: 8.1, dur: 2.6, str: 1.15, ang: -8, cross: 0.5 },
   ].map(g => ({ ...g, c: Math.cos(g.ang*Math.PI/180), s: Math.sin(g.ang*Math.PI/180) }));
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -91,18 +92,35 @@
   // ---- immagini del logo ----------------------------------------------------
   const U0 = LOGO.meta.u0, V0 = LOGO.meta.v0, UW = LOGO.meta.u1 - U0, VH = LOGO.meta.v1 - V0;
   // le immagini vengono decodificate subito (a schermo ancora nero), non al primo disegno
-  const frames = LOGO.frames.map(src => { const im = new Image(); im.src = src; return im; });
+  const IMG = {};
   const loaded = im => (im.decode ? im.decode() : Promise.reject()).catch(() =>
     new Promise(r => { if (im.complete) r(); else { im.onload = r; im.onerror = r; } }));
-  const ready = Promise.all(frames.map(async (im, i) => {
+  const ready = Promise.all(['S', 'Bstay', 'Bmove'].map(async key => {
+    const im = new Image(); im.src = LOGO[key]; IMG[key] = im;
     await loaded(im);
-    if (window.createImageBitmap) { try { frames[i] = await createImageBitmap(im); } catch (e) {} }
+    if (window.createImageBitmap) { try { IMG[key] = await createImageBitmap(im); } catch (e) {} }
   }));
+  // granelli del fiume: [u, v] da dove il vento li solleva, [u, v] dove li deposita (-1 = portati via)
+  const SUB = [[0, 0], [0.42, -0.38], [-0.35, 0.45]];
+  const MV = (() => {
+    const b = atob(LOGO.movers), a = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i);
+    const q = new Int16Array(a.buffer), n = q.length/4, out = [];
+    for (let i = 0; i < n; i++) {
+      const su = q[4*i]/2, sv = q[4*i + 1]/2, tu = q[4*i + 2]/2, tv = q[4*i + 3]/2;
+      const away = tu < 0, r1 = hash(i, 11), r2 = hash(i, 23), r3 = hash(i, 37);
+      out.push({ su, sv, away, keep: r3, tu: away ? su + 260 + r1*520 : tu, tv: away ? sv - 70 + r2*90 : tv,
+                 dur: (away ? 1.1 : 0.9) + r3*0.9, a: 0.3 + r1*0.55, ph: r2*50, t0: 0, x: 0, y: 0 });
+    }
+    return out;
+  })();
 
   // ---- misure -------------------------------------------------------------
   let W = 0, H = 0, DPR = 1, DPR_MAX = 2, VS = 1, box = { x: 0, y: 0, s: 1 };
   const lc = document.createElement('canvas'), lcc = lc.getContext('2d');   // logo che si sgretola
-  const mk = document.createElement('canvas');                            // maschera del fronte
+  const lc2 = document.createElement('canvas'), lcc2 = lc2.getContext('2d');
+  const lc3 = document.createElement('canvas'), lcc3 = lc3.getContext('2d');
+  const mk = document.createElement('canvas'), mk2 = document.createElement('canvas');   // maschere del fronte
   const RAG = new Float32Array(256);   // scarto del fronte per riga (frazione di 1254)
   for (let y = 0; y < 256; y++)
     RAG[y] = (noise(y*0.035, 3.1) - 0.5)*0.12 + (noise(y*0.11, 7.7) - 0.5)*0.05 + (noise(y*0.4, 1.3) - 0.5)*0.018;
@@ -117,11 +135,17 @@
     box = { x: (W - S)/2, y: (H - S)/2, s: S/1254 };
     // tela per il logo che si sgretola + maschera frastagliata (larga il doppio: il fronte sta a metà)
     lc.width = Math.max(1, Math.round(UW*box.s*DPR)); lc.height = Math.max(1, Math.round(VH*box.s*DPR));
+    lc2.width = lc3.width = lc.width; lc2.height = lc3.height = lc.height;
     // la maschera si calcola a metà risoluzione (preparazione leggera anche sui telefoni)
+    buildFront(mk, Math.max(4, 7*box.s*DPR));           // uscita: fronte netto e frastagliato
+    buildFront(mk2, Math.max(10, 38*box.s*DPR));        // folata del fiume: la polvere si solleva piano
+  }
+  function buildFront(mk, soft) {
     const w = Math.max(1, lc.width >> 1), h = Math.max(1, lc.height >> 1);
     mk.width = 2*w; mk.height = h;
     const g = mk.getContext('2d'), img = g.createImageData(2*w, h), d = img.data;
-    const kx = w/UW, ky = h/VH, soft = Math.max(4, 7*box.s*DPR);
+    const kx = w/UW, ky = h/VH;
+    soft = soft/2;
     for (let y = 0; y < h; y++) {
       const v = V0 + y/ky, rag = RAG[Math.min(255, (v/1254*256)|0)]*1254*kx;
       const front = w + rag;
@@ -143,25 +167,31 @@
   { const g = puff.getContext('2d'), r = g.createRadialGradient(16, 16, 0, 16, 16, 16);
     r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.45, 'rgba(255,255,255,.55)'); r.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = r; g.fillRect(0, 0, 32, 32); }
-  function deposit(u, v, a, rad) {                    // u, v in unità del viewBox; rad nelle stesse unità
+  const ac2 = document.createElement('canvas'), acc2 = ac2.getContext('2d');   // polvere arrivata col vento
+  ac2.width = ac.width; ac2.height = ac.height;
+  function deposit(u, v, a, rad, c = acc) {           // u, v in unità del viewBox; rad nelle stesse unità
     const R = rad*AQ, px = (u - U0)*AQ, py = (v - V0)*AQ;
-    acc.globalAlpha = a; acc.drawImage(puff, px - R, py - R, 2*R, 2*R);
+    c.globalAlpha = a; c.drawImage(puff, px - R, py - R, 2*R, 2*R);
   }
 
   // ---- punti del logo (la polvere si posa dove il logo è chiaro) ------------
-  let targets = [];            // {u, v, l} in unità del viewBox 1254, ordinati per u
-  function sampleLogo() {
+  let targets = [], solidTargets = [];   // {u, v, l} in unità del viewBox 1254, ordinati per u
+  function samplePoints(draw) {
     const n = 300, k = n/UW, m = Math.round(VH*k);
     const off = document.createElement('canvas'); off.width = n; off.height = m;
-    const oc = off.getContext('2d'); oc.drawImage(frames[0], 0, 0, n, m);
-    let d; try { d = oc.getImageData(0, 0, n, m).data; } catch (e) { return; }
+    const oc = off.getContext('2d'); draw(oc, n, m);
+    let d; try { d = oc.getImageData(0, 0, n, m).data; } catch (e) { return []; }
     const pts = []; let tries = 0;
     while (pts.length < 2600 && tries < 400000) {
       tries++;
       const x = Math.random()*n, y = Math.random()*m, l = d[((y|0)*n + (x|0))*4 + 3]/255;
       if (Math.random() < Math.pow(l, 1.3)) pts.push({ u: U0 + x/k, v: V0 + y/k, l, gone: false });
     }
-    targets = pts.sort((a, b) => a.u - b.u);
+    return pts.sort((a, b) => a.u - b.u);
+  }
+  function sampleLogo() {
+    solidTargets = samplePoints((c, n, m) => c.drawImage(IMG.S, 0, 0, n, m));
+    targets = samplePoints((c, n, m) => drawLogo(c, 1, 0, 0, 0, n, m));
   }
 
   // ---- particelle -----------------------------------------------------------
@@ -214,17 +244,16 @@
   const queue = air.add;
 
   // ---- disegno del logo -------------------------------------------------------
-  function drawLogo(c, alpha, t, x, y, w, h) {
+  function drawLogo(c, alpha, t, x, y, w, h) {       // il logo finale = polvere rimasta + polvere arrivata
     if (alpha <= 0.002) return;
-    const m = 0.5 + 0.5*Math.sin(t*1.7);               // i due fotogrammi di grana si alternano piano
-    c.globalAlpha = alpha*(1 - m); c.globalCompositeOperation = 'source-over';
-    c.drawImage(frames[0], x, y, w, h);
-    c.globalAlpha = alpha*m; c.globalCompositeOperation = 'lighter';
-    c.drawImage(frames[1], x, y, w, h);
+    c.globalAlpha = alpha; c.globalCompositeOperation = 'source-over';
+    c.drawImage(IMG.Bstay, x, y, w, h);
+    c.globalCompositeOperation = 'lighter';
+    c.drawImage(IMG.Bmove, x, y, w, h);
     c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   }
 
-  let formed = false, emitIdx = 0;
+  let formed = false, emitIdx = 0, carveFront = -1e9;
 
   function step(t, dt) {
     // scia: ogni fotogramma la polvere precedente sbiadisce un po', come fumo
@@ -254,9 +283,9 @@
     }
 
     // la seconda folata raccoglie la polvere che forma il logo
-    if (!formed && t >= GUSTS[1].t0 + 0.15 && targets.length) {
+    if (!formed && t >= GUSTS[1].t0 + 0.15 && solidTargets.length) {
       formed = true;
-      const n = Math.min(Math.round(1400*budget), targets.length);
+      const n = Math.min(Math.round(1400*budget), solidTargets.length);
       // metà dei granelli viene dall'aria: si scelgono a caso e si tolgono in un solo passaggio
       const take = Math.min(n >> 1, Math.max(0, ambient.length - 200)), picked = [];
       for (let i = 0; i < take; i++) {
@@ -265,7 +294,7 @@
       }
       ambient = ambient.slice(take);
       for (let i = 0; i < n; i++) {
-        const tg = targets[(i*targets.length/n)|0];
+        const tg = solidTargets[(i*solidTargets.length/n)|0];
         const q = i % 2 === 0 ? picked[i >> 1] : null;
         const jit = (Math.random() - 0.5)*0.22;
         formers.push(q ? { tg, jit, done: 0, x: q.x, y: q.y, vx: q.vx, vy: q.vy, a: 0.3 + tg.l*0.6, born: 0 }
@@ -304,20 +333,46 @@
     lctx.clearRect(0, 0, W, H);
     const fp = clamp((t - T.form[0])/(T.form[1] - T.form[0]), 0, 1);
     const xp = clamp((t - T.exit[0])/(T.exit[1] - T.exit[0]), 0, 1);
-    if (xp <= 0) {
-      // il logo si vede solo dove la polvere si è posata; alla fine la maschera si chiude del tutto
-      const fill = smooth(T.form[1] - 0.35, T.form[1] + 0.25, t);
-      if (fill >= 1) drawLogo(lctx, 1, t, x, y, w, h);
+    const fill = smooth(T.form[1] - 0.35, T.form[1] + 0.25, t);
+    const mkAt = (c, cv, F) => c.drawImage(mk2, (F - U0)*cv.width/UW - cv.width, 0, 2*cv.width, cv.height);
+    if (t < T.carve[0]) {
+      // 1) la A pulita si vede solo dove la polvere si è posata; alla fine la maschera si chiude
+      if (fill >= 1) lctx.drawImage(IMG.S, x, y, w, h);
       else if (t > T.form[0] - 0.8) {
         if (fill > 0) { acc.globalAlpha = fill*0.25; acc.fillStyle = '#fff'; acc.fillRect(0, 0, ac.width, ac.height); }
         acc.globalAlpha = 1;
         lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.clearRect(0, 0, lc.width, lc.height);
-        drawLogo(lcc, 1, t, 0, 0, lc.width, lc.height);
+        lcc.drawImage(IMG.S, 0, 0, lc.width, lc.height);
         lcc.globalCompositeOperation = 'destination-in';
         lcc.drawImage(ac, 0, 0, lc.width, lc.height);
         lcc.globalCompositeOperation = 'source-over';
         lctx.drawImage(lc, x, y, w, h);
       }
+    } else if (xp <= 0 && t < T.carve[1]) {
+      // 2) la folata attraversa la lettera: dove passa, la polvere del fiume si solleva (S → Bstay)
+      //    e quella trascinata compare dove si deposita (Bmove attraverso la maschera degli arrivi)
+      const cf = clamp((t - T.carve[0])/1.15, 0, 1), F = U0 - 60 + (UW + 120)*cf;
+      carveFront = F;
+      const endFill = smooth(T.carve[1] - 0.45, T.carve[1], t);
+      if (endFill > 0) { acc2.globalAlpha = endFill*0.3; acc2.fillStyle = '#fff'; acc2.fillRect(0, 0, ac2.width, ac2.height); acc2.globalAlpha = 1; }
+      lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.clearRect(0, 0, lc.width, lc.height);
+      lcc.drawImage(IMG.S, 0, 0, lc.width, lc.height);
+      lcc.globalCompositeOperation = 'destination-in'; mkAt(lcc, lc, F);
+      lcc.globalCompositeOperation = 'source-over';
+      lcc2.clearRect(0, 0, lc2.width, lc2.height);
+      lcc2.drawImage(IMG.Bstay, 0, 0, lc2.width, lc2.height);
+      lcc2.globalCompositeOperation = 'destination-out'; mkAt(lcc2, lc2, F);
+      lcc2.globalCompositeOperation = 'source-over';
+      lcc3.clearRect(0, 0, lc3.width, lc3.height);
+      lcc3.drawImage(IMG.Bmove, 0, 0, lc3.width, lc3.height);
+      lcc3.globalCompositeOperation = 'destination-in'; lcc3.drawImage(ac2, 0, 0, lc3.width, lc3.height);
+      lcc3.globalCompositeOperation = 'source-over';
+      lctx.drawImage(lc, x, y, w, h);
+      lctx.globalCompositeOperation = 'lighter';
+      lctx.drawImage(lc2, x, y, w, h); lctx.drawImage(lc3, x, y, w, h);
+      lctx.globalCompositeOperation = 'source-over';
+    } else if (xp <= 0) {
+      drawLogo(lctx, 1, t, x, y, w, h);
     } else if (xp < 1) {
       // uscita: il vento lo sgretola da sinistra a destra con un fronte frastagliato
       const e = easeInOut(xp), F = (0.1 + 0.8*e)*1254;
@@ -338,6 +393,41 @@
                      vx: (30 + Math.random()*140)*VS, vy: (-70 + Math.random()*110)*VS,
                      w: 0.35 + Math.random()*Math.random()*2.6,     // peso: i granelli leggeri volano via prima
                      life: 1.4 + Math.random()*1.6, age: 0, a: 0.18 + tg.l*0.5, big: tg.l > 0.85 && Math.random() < 0.25 });
+      }
+    }
+
+    // granelli sollevati dalla folata: partono quando il fronte li raggiunge, volano col vento,
+    // una parte si deposita nella bandiera e sui bordi del fiume, il resto viene portato via
+    if (t >= T.carve[0] && t < T.carve[1] + 1.6) {
+      const subs = budget > 0.7 ? 3 : budget > 0.45 ? 2 : 1;
+      const keepAway = 0.75*budget;                     // su dispositivi lenti meno polvere portata via
+      for (let i = 0; i < MV.length; i++) {
+        const m = MV[i];
+        if (m.away && m.keep > keepAway) continue;
+        if (!m.t0) {
+          if (t < T.carve[1] && m.su <= carveFront + RAG[Math.min(255, (m.sv/1254*256)|0)]*1254) {
+            m.t0 = t; m.x = m.su; m.y = m.sv;
+          } else continue;
+        }
+        const tau = (t - m.t0)/m.dur;
+        if (tau > 1.25) continue;
+        const e = tau < 1 ? (1 - Math.cos(Math.PI*clamp(tau, 0, 1)))/2 : 1, bell = Math.sin(Math.PI*clamp(tau, 0, 1));
+        const n1 = noise(m.ph, t*1.1) - 0.5, n2 = noise(m.ph + 7, t*1.3) - 0.5;
+        const nx = m.su + (m.tu - m.su)*e + n1*46*bell;
+        const ny = m.sv + (m.tv - m.sv)*e - 22*bell + n2*30*bell;
+        const alpha = 0.55*m.a*Math.min(1, tau*5)*(m.away ? 1 - smooth(0.35, 1, tau) : 1 - smooth(0.9, 1.25, tau));
+        // la polvere portata via si allarga man mano (si disperde nell'aria), quella che si posa si ricompatta
+        const spread = m.away ? 10 + 110*clamp(tau, 0, 1) : 14*bell;
+        for (let j = 0; j < subs; j++) {
+          // ogni sotto-granello ha una sua direzione fissa: la nuvola si apre senza altro rumore da calcolare
+          const ox = (SUB[j][0] + n2*0.5)*spread*0.6, oy = (SUB[j][1] + n1*0.5)*spread;
+          queue(box.x + (m.x + ox)*box.s, box.y + (m.y + oy)*box.s, box.x + (nx + ox)*box.s, box.y + (ny + oy)*box.s, alpha, j === 0 && m.a > 0.75);
+        }
+        if (!m.away) {
+          if (tau > 0.7 && tau < 1) deposit(nx, ny, 0.05, 11, acc2);         // polvere che si posa lungo l'arrivo
+          if (tau >= 1 && !m.done) { m.done = 1; deposit(m.tu, m.tv, 0.85, 17, acc2); }
+        }
+        m.x = nx; m.y = ny;
       }
     }
 
@@ -406,7 +496,9 @@
   function play() {
     cancelAnimationFrame(raf);
     intro.classList.remove('gone'); intro.style.opacity = '1'; setTitle(0);
-    formers = []; blown = []; formed = false; emitIdx = 0; acc.clearRect(0, 0, ac.width, ac.height); t = 0; last = 0; slow = []; budget = 1; DPR_MAX = 2;
+    formers = []; blown = []; formed = false; emitIdx = 0; carveFront = -1e9;
+    acc.clearRect(0, 0, ac.width, ac.height); acc2.clearRect(0, 0, ac2.width, ac2.height);
+    MV.forEach(m => { m.t0 = 0; m.done = 0; }); t = 0; last = 0; slow = []; budget = 1; DPR_MAX = 2;
     targets.forEach(tg => { tg.gone = false; });
     resize();
     makeAmbient(Math.round(clamp(W*H/340, 1100, 3400)*budget));

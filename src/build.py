@@ -4,8 +4,8 @@ usata per l'anteprima pubblicata."""
 import sys, re, pathlib
 here = pathlib.Path(__file__).resolve().parent
 root = here.parent
-# fotogrammi del logo (src/render_logo.py li rigenera dall'SVG di ../agora_loghi_svg)
-logo = (here/'logo_frames.json').read_text()
+# immagini e granelli della polvere (src/render_logo.py poi src/prep_morph.py)
+logo = (here/'morph.json').read_text()
 body = (here/'template.html').read_text().replace('__LOGO_JSON__', logo)
 title_end = body.index('</title>') + len('</title>')
 head, rest = body[:title_end], body[title_end:]
