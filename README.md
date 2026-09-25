@@ -13,18 +13,25 @@ la home, che per ora mostra solo la scritta **Aporia**.
 | `index.html` | la pagina: video d'apertura, poi la home "Aporia" |
 | `assets/intro-portrait.mp4` / `.webm` | video verticale 1080×1920 (telefoni, tablet in verticale) |
 | `assets/intro-landscape.mp4` / `.webm` | video orizzontale 1920×1080 (computer, tablet in orizzontale) |
-| `versioni/` | tutte le animazioni di apertura fatte finora (v1–v7 pagine, v8–v9 video), per il selettore |
+| `versioni/` | tutte le animazioni di apertura fatte finora: pagine originali v1–v7 e video di tutte in `media/` |
 | `intro-canvas.html` | versione precedente, calcolata dal vivo nel browser (tenuta come riferimento) |
 | `preview/` | fotogrammi di controllo (telefono e desktop) |
 | `src/` | script che generano tutto |
 
 ## Selettore delle animazioni
 
-Nella home, sotto "Aporia", il pulsante **Animazioni di apertura** apre l'elenco di tutte le
-versioni fatte finora, dalla prima (v1) all'attuale (v10). Ognuna si riproduce a tutto schermo
-con **Rivedi** e **Chiudi** (anche Esc). Le versioni v1–v7 sono recuperate dallo storico git
-(`python src/build_versions.py`); le v8 e v9 sono i video precedenti in `versioni/media/`,
-riprodotti da `versioni/video.html#v8` e `#v9`.
+In alto c'è una fila di pulsanti, uno per ogni animazione di apertura fatta finora (01–10, la
+● è quella attuale), tutti visibili insieme senza dover scorrere. Toccandone uno parte subito a
+tutto schermo e sotto i pulsanti compare una riga che la descrive.
+
+Tutte le versioni sono video, perché così si riproducono uguali ovunque (la pagina in cui gira il
+sito non permette di incorporare altre pagine):
+- **v1–v7** erano animate dal vivo nel browser: `src/record_versions.py` le registra fotogramma
+  per fotogramma a 60 fps, con l'orologio del browser fermo e fatto avanzare a mano, a partire
+  dalle pagine originali recuperate dallo storico git (`src/build_versions.py` → `versioni/v*.html`).
+  La v1 è molto lenta da registrare (circa 40 minuti) perché ricalcola i filtri SVG del logo.
+- **v8–v9** sono i video precedenti; **v10** è quello attuale (`assets/`).
+- I video in `versioni/media/` sono solo MP4 (H.264: iPhone, iPad, Android, Chrome, Safari).
 
 ## Perché un video
 

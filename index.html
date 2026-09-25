@@ -9,11 +9,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   /* un solo mondo visivo, scuro per scelta: fondo e colori sempre espliciti */
-  :root { color-scheme: dark; --night: #000; --paper: #ece8e1; --home-bg: #000; }
+  :root {
+    color-scheme: dark; --night: #000; --paper: #ece8e1; --dim: #8e8a84; --line: #2a2823; --chip: rgba(18,17,15,.72);
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
   html, body { height: 100%; }
   body { margin: 0; background: var(--night); color: var(--paper); overflow: hidden; }
 
-  #home { position: fixed; inset: 0; display: grid; place-items: center; background: var(--home-bg); padding-inline: 16px; }
+  #home { position: fixed; inset: 0; display: grid; place-items: center; background: var(--night); padding-inline: 16px; }
   #home h1 {
     margin: 0; font-family: "Italiana", "Didot", "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
     font-weight: 400; font-size: clamp(56px, 13vw, 200px); line-height: 1;
@@ -24,162 +27,116 @@
   body.home #home h1 { opacity: 1; }
   body:not(.home) #home h1 { letter-spacing: 0.42em; margin-right: -0.42em; }
 
-  /* selettore delle animazioni di apertura */
-  :root { --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace; --dim: #8e8a84; --line: #26241f; --sheet: #0d0c0b; }
-  #pick {
-    position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
-    font: 500 11px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
-    background: none; border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; cursor: pointer;
-    opacity: 0; transition: opacity .9s ease .4s, color .2s, border-color .2s; white-space: nowrap;
-  }
-  body.home #pick { opacity: 1; }
-  #pick:hover, #pick:focus-visible { color: var(--paper); border-color: #4a463f; outline: none; }
-  #sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; max-height: min(78vh, 640px); overflow-y: auto;
-    background: var(--sheet); border-top: 1px solid var(--line);
-    padding: 22px max(16px, env(safe-area-inset-left, 0px)) calc(22px + env(safe-area-inset-bottom, 0px));
-    transform: translateY(102%); transition: transform .45s cubic-bezier(.2,.8,.2,1); z-index: 5;
-  }
-  #sheet.open { transform: none; }
-  #sheet header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; max-width: 760px; margin: 0 auto 14px; }
-  #sheet h2 { margin: 0; font: 400 26px/1.1 "Italiana", "Didot", serif; letter-spacing: .06em; }
-  #sheet .close { font: 500 11px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
-    background: none; border: 0; padding: 8px 0 8px 8px; cursor: pointer; }
-  #sheet .close:hover, #sheet .close:focus-visible { color: var(--paper); outline: none; }
-  #list { list-style: none; margin: 0 auto; padding: 0; max-width: 760px; display: grid; }
-  #list button {
-    width: 100%; display: grid; grid-template-columns: 3.2em 1fr auto; gap: 4px 14px; align-items: baseline;
-    text-align: left; background: none; color: var(--paper); border: 0; border-top: 1px solid var(--line);
-    padding: 14px 4px; cursor: pointer; font: inherit;
-  }
-  #list li:last-child button { border-bottom: 1px solid var(--line); }
-  #list button:hover, #list button:focus-visible { background: #15130f; outline: none; }
-  #list .n { font: 500 12px/1.4 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; grid-row: span 2; }
-  #list .t { font: 400 17px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  #list .d { font: 500 11px/1.4 var(--mono); color: var(--dim); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
-  #list .s { grid-column: 2 / 4; font: 400 13.5px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--dim); max-width: 60ch; }
-  #list .now .n::after { content: " ●"; color: var(--paper); }
-  #stage { position: fixed; inset: 0; z-index: 10; background: #000; display: none; }
-  #stage.on { display: block; }
-  #stage iframe { width: 100%; height: 100%; border: 0; display: block; }
-  #stage .bar { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; display: flex; gap: 8px; }
-  #stage .bar button { font: 500 11px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--paper);
-    background: rgba(0,0,0,.55); border: 1px solid #3a3731; border-radius: 999px; padding: 9px 13px; cursor: pointer; }
-  #stage .bar button:focus-visible { outline: 1px solid var(--paper); }
-  #stage .label { position: absolute; left: 14px; right: 190px; top: calc(21px + env(safe-area-inset-top, 0px)); font: 500 11px/1 var(--mono);
-    letter-spacing: .14em; text-transform: uppercase; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
   #intro { position: fixed; inset: 0; background: var(--night); transition: opacity .6s ease; }
-  /* il video riempie sempre tutto lo schermo (niente bande nere): il logo sta nella zona centrale
-     che resta visibile con qualsiasi proporzione */
+  /* il video riempie sempre tutto lo schermo (niente bande nere) */
   #intro video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--night); }
+  #intro video.contain { object-fit: contain; }
   body.home #intro { opacity: 0; pointer-events: none; }
+
+  /* selettore: in alto, tutte le versioni visibili insieme, niente da scorrere */
+  #picker {
+    position: fixed; z-index: 5; left: 0; right: 0; top: 0;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 8px;
+    background: linear-gradient(#000c 0%, #0008 70%, #0000 100%);
+  }
+  #chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; max-width: 980px; margin: 0 auto; padding: 0; list-style: none; }
+  #chips button {
+    width: 100%; display: grid; gap: 3px; justify-items: start; text-align: left;
+    background: var(--chip); color: var(--dim); border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 8px 6px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  #chips .n { font: 500 12px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+  #chips .t { font: 400 10.5px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  #chips button:hover { color: var(--paper); border-color: #4a463f; }
+  #chips button:focus-visible { outline: 1px solid var(--paper); outline-offset: 1px; }
+  #chips button[aria-pressed="true"] { color: #0b0a09; background: var(--paper); border-color: var(--paper); }
+  #caption {
+    max-width: 980px; margin: 8px auto 0; font: 400 12.5px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--dim);
+    min-height: 1.4em; text-wrap: balance;
+  }
+  #caption b { color: var(--paper); font-weight: 500; }
+  @media (max-width: 420px) { #caption { font-size: 12px; } }
 </style>
 </head>
 <body>
 
 <main id="home" aria-live="polite"><h1 id="homeTitle">Aporia</h1></main>
 
-<button id="pick" type="button" aria-controls="sheet" aria-expanded="false">Animazioni di apertura</button>
-<section id="sheet" aria-label="Animazioni di apertura" aria-hidden="true">
-  <header><h2>Animazioni di apertura</h2><button class="close" type="button" id="sheetClose">Chiudi</button></header>
-  <ol id="list"></ol>
-</section>
-<div id="stage" aria-modal="true" role="dialog" aria-label="Anteprima animazione">
-  <iframe id="stageFrame" title="Anteprima animazione" allow="autoplay"></iframe>
-  <span class="label" id="stageLabel"></span>
-  <div class="bar"><button type="button" id="stageAgain">Rivedi</button><button type="button" id="stageClose">Chiudi</button></div>
-</div>
-
 <div id="intro" role="img" aria-label="Aporia">
   <video id="film" muted playsinline preload="auto" disablepictureinpicture aria-hidden="true"></video>
 </div>
 
+<nav id="picker" aria-label="Animazioni di apertura">
+  <ul id="chips"></ul>
+  <p id="caption" aria-live="polite"></p>
+</nav>
+
 <script>
 (() => {
   'use strict';
-  // il video è una simulazione di vento e polvere già calcolata (src/sim_video.py):
-  // il telefono deve solo riprodurlo, quindi è fluido ovunque
+  // tutte le animazioni di apertura fatte finora; ognuna è un video (le v1–v7 erano animate dal
+  // vivo nel browser e sono state registrate fotogramma per fotogramma: src/record_versions.py)
+  const V = [
+    { k: 'v1', t: 'Prima', d: 'Prima versione: dal nero la polvere, folate di vento, il logo compare e si sgretola.' },
+    { k: 'v2', t: 'Foto', d: 'Logo pre-renderizzato: niente blocchi sui telefoni né tremolio su iPad.' },
+    { k: 'v3', t: 'Scia', d: 'Il logo arriva col vento trascinando una scia e si ferma nitido.' },
+    { k: 'v4', t: 'Polvere', d: 'Il logo è invisibile e si accende solo dove un granello si posa.' },
+    { k: 'v5', t: 'Fiume', d: 'Una A pulita, poi una folata scava il fiume e lo trascina nella bandiera (11 s).' },
+    { k: 'v6', t: 'Corta', d: 'La stessa storia in circa 5 secondi.' },
+    { k: 'v7', t: 'Raffica', d: 'Vento di fondo continuo, fasi accavallate, granelli spinti dal vento.' },
+    { k: 'v8', t: 'Video 1', d: 'Prima simulazione fisica (450.000 granelli): il logo si divide in polvere che resta e che vola.', contain: true },
+    { k: 'v9', t: 'Video 2', d: 'Un solo vento continuo porta tutto al logo, passando dalla A. Schermo sempre pieno.' },
+    { k: 'v10', t: 'Attuale', d: 'Come la 9, ma la polvere arriva con una raffica rapida e si posa di colpo.', cur: true },
+  ];
   const film = document.getElementById('film'), body = document.body;
+  const chips = document.getElementById('chips'), caption = document.getElementById('caption');
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const portrait = () => window.innerHeight >= window.innerWidth;
-  let done = false, watchdog = 0;
+  const ext = film.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';   // H.264 o WebM VP9
+  let done = false, watchdog = 0, sel = V.length - 1;
 
+  function src(v) {
+    const o = window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
+    // le versioni vecchie sono pubblicate solo in MP4 (H.264: iPhone, iPad, Android, Chrome, Safari)
+    return v.cur ? `assets/intro-${o}.${ext}` : `versioni/media/${v.k}-${o}.mp4`;
+  }
   function toHome() {
     if (done) return; done = true;
     clearTimeout(watchdog);
     body.classList.add('home');
     setTimeout(() => { try { film.pause(); } catch (e) {} }, 700);
   }
-  function play() {
+  function play(i) {
+    sel = i; const v = V[i];
+    [...chips.querySelectorAll('button')].forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+    caption.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b> · `; caption.append(v.d);
     done = false; body.classList.remove('home');
-    // H.264 (Safari, iPad, Android, Chrome); WebM VP9 dove l'H.264 non c'è
-    const ext = film.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
-    film.src = `assets/intro-${portrait() ? 'portrait' : 'landscape'}.${ext}`;
-    film.currentTime = 0;
-    // se il video non parte (risparmio energetico, rete lenta) si va comunque alla home
-    watchdog = setTimeout(toHome, 2500);
-    film.addEventListener('playing', () => { clearTimeout(watchdog); watchdog = setTimeout(toHome, 7000); }, { once: true });
-    const p = film.play();
-    if (p && p.catch) p.catch(toHome);
+    film.classList.toggle('contain', !!v.contain);
+    film.src = src(v); film.currentTime = 0;
+    clearTimeout(watchdog);
+    watchdog = setTimeout(toHome, 4000);            // se il video non parte si va comunque alla home
+    film.addEventListener('playing', () => { clearTimeout(watchdog); watchdog = setTimeout(toHome, 14000); }, { once: true });
+    const p = film.play(); if (p && p.catch) p.catch(toHome);
   }
   // la home compare mentre l'ultima polvere si sta ancora disperdendo
   film.addEventListener('timeupdate', () => { if (film.duration && film.currentTime > film.duration - 0.55) toHome(); });
   film.addEventListener('ended', toHome);
   film.addEventListener('error', toHome);
 
-  document.getElementById('intro').addEventListener('pointerdown', toHome);        // tocco: salta
-  window.addEventListener('keydown', e => { if (!done && !e.metaKey && !e.ctrlKey) toHome(); });
-  document.getElementById('homeTitle').addEventListener('dblclick', play);         // doppio click: rivedi
-
-  if (reduce) { requestAnimationFrame(toHome); } else play();
-
-  // ---- selettore: tutte le animazioni di apertura fatte finora ---------------------------
-  const V = [
-    { f: 'v1.html', t: 'Prima versione', d: '8,6 s', s: 'Dal nero la polvere, folate di vento, il logo compare e si sgretola. Il logo è l’SVG animato dal vivo.' },
-    { f: 'v2.html', t: 'Logo come immagine', d: '8,6 s', s: 'Stessa sequenza, ma il logo è pre-renderizzato: niente blocchi sui telefoni né tremolio su iPad.' },
-    { f: 'v3.html', t: 'Scia di vento', d: '8,6 s', s: 'Il logo arriva col vento trascinando una scia e si ferma nitido; stesso effetto su telefono e desktop.' },
-    { f: 'v4.html', t: 'Logo dalla polvere', d: '8,6 s', s: 'Il logo è invisibile e si accende solo dove un granello si posa, da sinistra a destra.' },
-    { f: 'v5.html', t: 'Il vento scava il fiume', d: '11 s', s: 'La polvere costruisce una A pulita, poi una folata solleva il fiume e lo trascina nella bandiera.' },
-    { f: 'v6.html', t: 'Versione corta', d: '5,3 s', s: 'La stessa storia della precedente, con fasi più rapide e sovrapposte.' },
-    { f: 'v7.html', t: 'Raffica continua', d: '5,2 s', s: 'Vento di fondo sempre presente, fasi accavallate, granelli spinti dalla fisica del vento.' },
-    { f: 'video.html#v8', t: 'Video: prima simulazione', d: '5 s', s: 'Simulazione fisica di 450.000 granelli resa come video. Il logo si divide in polvere che resta e polvere che vola.' },
-    { f: 'video.html#v9', t: 'Video: un solo vento', d: '5 s', s: 'Un vento continuo porta tutto al logo definitivo, passando dalla A. Schermo sempre pieno.' },
-    { f: null, t: 'Video: raffica veloce', d: '4,7 s', s: 'Come la precedente, ma la polvere arriva con una raffica rapida e si posa di colpo. È la versione attuale del sito.' },
-  ];
-  const list = document.getElementById('list'), sheet = document.getElementById('sheet'), pick = document.getElementById('pick');
-  const stage = document.getElementById('stage'), frame = document.getElementById('stageFrame'), label = document.getElementById('stageLabel');
-  let current = null;
   V.forEach((v, i) => {
     const li = document.createElement('li'), b = document.createElement('button');
-    b.type = 'button'; if (!v.f) b.className = 'now';
-    b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t"></span><span class="d"></span><span class="s"></span>`;
-    b.querySelector('.t').textContent = v.t; b.querySelector('.d').textContent = v.d; b.querySelector('.s').textContent = v.s;
-    b.addEventListener('click', () => show(i));
-    li.appendChild(b); list.appendChild(li);
+    b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.title = v.d;
+    b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}${v.cur ? ' ●' : ''}</span><span class="t"></span>`;
+    b.querySelector('.t').textContent = v.t;
+    b.addEventListener('click', () => play(i));
+    li.appendChild(b); chips.appendChild(li);
   });
-  function openSheet(o) {
-    sheet.classList.toggle('open', o); sheet.setAttribute('aria-hidden', String(!o)); pick.setAttribute('aria-expanded', String(o));
-    if (o) setTimeout(() => list.querySelector('button').focus({ preventScroll: true }), 300);
-  }
-  function show(i) {
-    const v = V[i]; openSheet(false);
-    if (!v.f) { play(); return; }                       // la versione attuale è la pagina stessa
-    current = i; label.textContent = `${String(i + 1).padStart(2, '0')} · ${v.t}`;
-    frame.src = 'about:blank';
-    stage.classList.add('on');
-    requestAnimationFrame(() => { frame.src = 'versioni/' + v.f; });
-    document.getElementById('stageClose').focus({ preventScroll: true });
-  }
-  function closeStage() { stage.classList.remove('on'); frame.src = 'about:blank'; current = null; pick.focus({ preventScroll: true }); }
-  pick.addEventListener('click', e => { e.stopPropagation(); openSheet(!sheet.classList.contains('open')); });
-  document.getElementById('sheetClose').addEventListener('click', () => openSheet(false));
-  document.getElementById('stageClose').addEventListener('click', closeStage);
-  document.getElementById('stageAgain').addEventListener('click', () => { if (current !== null) show(current); });
-  window.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    if (stage.classList.contains('on')) closeStage(); else openSheet(false);
-  });
+
+  // tocco sul video: salta alla home; doppio click su "Aporia": rivedi la versione scelta
+  document.getElementById('intro').addEventListener('pointerdown', toHome);
+  document.getElementById('homeTitle').addEventListener('dblclick', () => play(sel));
+
+  if (reduce) { play(sel); toHome(); } else play(sel);
 })();
 </script>
 </body>
