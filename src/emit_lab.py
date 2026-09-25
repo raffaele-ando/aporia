@@ -1,7 +1,9 @@
-import json
+import json, sys
+sys.path.insert(0, 'src')
+from emit_v4 import P4
 svg = open('agora-logo-dust.svg').read()
 svg_inline = svg.replace('width="1254" height="1254"', 'width="100%" height="100%" preserveAspectRatio="xMidYMid meet"', 1)
-P = json.load(open('src/best_params.json'))
+P = P4
 
 HTML = r'''<!doctype html>
 <html lang="it">
@@ -81,6 +83,14 @@ HTML = r'''<!doctype html>
         <input type="range" id="gsd" min="1" max="120" step="1"></div>
     </fieldset>
 
+    <fieldset><legend>Polvere trascinata</legend>
+      <div class="row"><label for="tk">Intensità delle scie</label><output id="tk_v"></output>
+        <input type="range" id="tk" min="0" max="4" step="0.01"></div>
+      <div class="row"><label for="sw">Trascinamento della grana</label><output id="sw_v"></output>
+        <input type="range" id="sw" min="0" max="80" step="0.5"></div>
+      <div class="chk"><input type="checkbox" id="a_stream" checked><label for="a_stream">Scie che scorrono</label></div>
+    </fieldset>
+
     <fieldset><legend>Granelli sparsi</legend>
       <div class="row"><label for="sf">Dimensione granello</label><output id="sf_v"></output>
         <input type="range" id="sf" min="0.1" max="1.5" step="0.01"></div>
@@ -88,6 +98,8 @@ HTML = r'''<!doctype html>
         <input type="range" id="ss" min="0" max="10" step="0.05"></div>
       <div class="row"><label for="st">Soglia</label><output id="st_v"></output>
         <input type="range" id="st" min="0.3" max="0.95" step="0.005"></div>
+      <div class="row"><label for="hl">Dispersione fuori dalla luce</label><output id="hl_v"></output>
+        <input type="range" id="hl" min="0" max="30" step="0.1"></div>
     </fieldset>
 
     <fieldset><legend>Movimento / turbolenza</legend>
@@ -140,18 +152,19 @@ const N = {
   flow: $('#agoraFlowNoise'), disp: $('#agoraDisplace'),
   bloom: $('#agoraBloom').querySelector('feGaussianBlur'),
   soften: $('#agoraSoften').querySelector('feGaussianBlur'),
-  grad: $('#agoraGradient'),
+  grad: $('#agoraGradient'), halo: $('#agoraHalo'), sweep: $('#agoraSweep'),
 };
 const speckFns = [...svg.querySelectorAll('#agoraDustFx feComponentTransfer feFuncR, #agoraDustFx feComponentTransfer feFuncG, #agoraDustFx feComponentTransfer feFuncB')]
   .filter(f => f.getAttribute('type') === 'linear' && f.parentNode.getAttribute('result') === 'speck');
-const toneFns = [...svg.querySelectorAll('#agoraDustFx feComponentTransfer[result="toned"] > *')];
+const toneFns = [...svg.querySelectorAll('#agoraTone > *')];
 const grainMat = svg.querySelector('#agoraDustFx feColorMatrix[result="grain"]');
-const ANIM = { boil:$('#agoraBoil'), driftX:$('#agoraDriftX'), driftY:$('#agoraDriftY'), swirl:$('#agoraSwirl'), flow:$('#agoraFlow') };
+const streakMat = svg.querySelector('#agoraDustFx feColorMatrix[result="streak"]');
+const ANIM = { boil:$('#agoraBoil'), driftX:$('#agoraDriftX'), driftY:$('#agoraDriftY'), stream:$('#agoraStream'), swirl:$('#agoraSwirl'), flow:$('#agoraFlow') };
 const BASE_DUR = {}; Object.entries(ANIM).forEach(([k,a]) => { if (a) BASE_DUR[k] = parseFloat(a.getAttribute('dur')); });
 
 const DEF = {
   gf: parseFloat(N.grain.getAttribute('baseFrequency')), go: parseInt(N.grain.getAttribute('numOctaves')),
-  gs: __GS__, gsd: parseInt(N.grain.getAttribute('seed')),
+  gs: __GS__, gsd: parseInt(N.grain.getAttribute('seed')), tk: __TK__, sw: __SW__, hl: __HL__,
   sf: parseFloat(N.speck.getAttribute('baseFrequency')), ss: __SS__, st: __ST__,
   dsc: parseFloat(N.disp.getAttribute('scale')), ff: parseFloat(N.flow.getAttribute('baseFrequency')),
   ox: 0, oy: 0, spd: 1, amt: 1, glo: 1,
@@ -162,8 +175,9 @@ const S = {...DEF};
 let paintMode = 'solid', polarity = 'light';
 let ink = '#ffffff', bg = '#000000', bgOff = false, cols = ['#ff8a3d','#ff2e63','#4d5bff'];
 
-function setGrainSlope(v){ const i = 0.5 - v*0.5;
-  grainMat.setAttribute('values', `${v} 0 0 0 ${i} ${v} 0 0 0 ${i} ${v} 0 0 0 ${i} 0 0 0 0 1`); }
+function slopeMat(m, v){ const i = 0.5 - v*0.5;
+  m.setAttribute('values', `${v} 0 0 0 ${i} ${v} 0 0 0 ${i} ${v} 0 0 0 ${i} 0 0 0 0 1`); }
+function setGrainSlope(v){ slopeMat(grainMat, v); }
 function setSpeck(slope, thr){ speckFns.forEach(f => { f.setAttribute('slope', slope); f.setAttribute('intercept', (-slope*thr).toFixed(4)); }); }
 function setTone(slope, shift){ toneFns.forEach(f => { f.setAttribute('slope', slope); f.setAttribute('intercept', (shift + (1-slope)/2).toFixed(4)); }); }
 function gradAngle(deg){
@@ -175,6 +189,8 @@ function apply(){
   N.grain.setAttribute('baseFrequency', S.gf); N.grain.setAttribute('numOctaves', S.go);
   N.grain.setAttribute('seed', S.gsd); setGrainSlope(S.gs);
   N.speck.setAttribute('baseFrequency', S.sf); setSpeck(S.ss, S.st);
+  slopeMat(streakMat, S.tk); N.halo.setAttribute('stdDeviation', S.hl); N.sweep.setAttribute('scale', S.sw);
+  if (ANIM.swirl) ANIM.swirl.setAttribute('values', `${S.sw};${(S.sw*1.6).toFixed(2)};${S.sw}`);
   N.disp.setAttribute('scale', S.dsc); N.flow.setAttribute('baseFrequency', S.ff);
   N.shift.setAttribute('dx', S.ox); N.shift.setAttribute('dy', S.oy);
   N.bloom.setAttribute('stdDeviation', S.gb); N.soften.setAttribute('stdDeviation', S.sof);
@@ -185,7 +201,7 @@ function apply(){
   svg.style.setProperty('--mask', polarity === 'dark' ? 'url(#agoraMaskDark)' : 'url(#agoraMaskLight)');
   cols.forEach((c,i) => svg.style.setProperty('--c'+(i+1), c));
   $('#stage').classList.toggle('checker', bgOff);
-  const on = { boil:$('#a_boil').checked, driftX:$('#a_drift').checked, driftY:$('#a_drift').checked,
+  const on = { boil:$('#a_boil').checked, driftX:$('#a_drift').checked, driftY:$('#a_drift').checked, stream:$('#a_stream').checked,
                swirl:$('#a_swirl').checked, flow:$('#a_swirl').checked };
   Object.entries(ANIM).forEach(([k,a]) => { if(!a) return;
     a.setAttribute('dur', (BASE_DUR[k]/S.spd).toFixed(3)+'s');
@@ -195,7 +211,7 @@ function apply(){
 }
 for (const k of Object.keys(DEF)) { const el = document.getElementById(k); if (!el) continue;
   el.value = DEF[k]; el.addEventListener('input', e => { S[k] = parseFloat(e.target.value); apply(); }); }
-['a_boil','a_drift','a_swirl'].forEach(id => $('#'+id).addEventListener('change', apply));
+['a_boil','a_drift','a_stream','a_swirl'].forEach(id => $('#'+id).addEventListener('change', apply));
 $('#inkc').addEventListener('input', e => { ink = e.target.value; apply(); });
 $('#bgc').addEventListener('input', e => { bg = e.target.value; bgOff = false; $('#bgnone').checked = false; apply(); });
 $('#bgnone').addEventListener('change', e => { bgOff = e.target.checked; apply(); });
@@ -210,7 +226,7 @@ $('#m_dark').addEventListener('click', () => { polarity='dark'; $('#m_dark').cla
   if (ink === '#ffffff') { ink = '#101014'; $('#inkc').value = ink; } if (!bgOff && bg === '#000000') { bg='#f2efe9'; $('#bgc').value=bg; } apply(); });
 $('#reset').addEventListener('click', () => { Object.assign(S, DEF);
   for (const k of Object.keys(DEF)) { const el=document.getElementById(k); if (el) el.value = DEF[k]; }
-  ['a_boil','a_drift','a_swirl'].forEach(id => $('#'+id).checked = true);
+  ['a_boil','a_drift','a_stream','a_swirl'].forEach(id => $('#'+id).checked = true);
   paintMode='solid'; polarity='light'; ink='#ffffff'; bg='#000000'; bgOff=false; cols=['#ff8a3d','#ff2e63','#4d5bff'];
   $('#inkc').value=ink; $('#bgc').value=bg; $('#bgnone').checked=false;
   $('#p_solid').classList.add('on'); $('#p_grad').classList.remove('on'); $('#solidRow').hidden=false; $('#gradRow').hidden=true;
@@ -237,6 +253,9 @@ apply();
 out = (HTML.replace('__SVG__', svg_inline)
            .replace('__GS__', str(P['grain_slope']))
            .replace('__SS__', str(P['speck_slope']))
-           .replace('__ST__', str(P['speck_thr'])))
+           .replace('__ST__', str(P['speck_thr']))
+           .replace('__TK__', str(P['streak_slope']))
+           .replace('__SW__', str(P['sweep']))
+           .replace('__HL__', str(P['halo'])))
 open('agora-dust-lab.html','w').write(out)
 print('lab', len(out)//1024, 'KB')

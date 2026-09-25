@@ -79,33 +79,44 @@ l'angolo, o sostituirlo con un gradiente radiale o conico tuo.
 
 Strati, tutti vettoriali:
 
-1. **Campo luminoso** — 19 tracciati annidati (isolivelli) dentro `#agoraField`, ritagliati
-   sulla lettera e ammorbiditi da `#agoraSoften`. È la "luce" del logo.
-2. **Alone** (`#agoraGlowField`) — la frangia luminosa che esce dalla sagoma, sfocata da `#agoraBloom`.
-3. **Motore polvere** (`#agoraDustFx`) — il filtro che genera e muove la polvere.
+1. **Campo luminoso** (`#agoraField`): 27 tracciati annidati (isolivelli), più fitti negli
+   scuri così le sfumature non fanno gradini, ammorbiditi da `#agoraSoften`. È la "luce" del logo.
+2. **Sagoma** (`#agoraSurface`): taglia la luce solo dove il bordo della A è netto (lati, cima,
+   base). Nel fiume e nella bandiera non taglia: lì la luce sfuma da sola come nell'originale.
+3. **Alone** (`#agoraGlowField`): la frangia luminosa che esce dalla sagoma, sfocata da `#agoraBloom`.
+4. **Mappe** (`#agoraGrainMap`, `#agoraDragMap`): dicono al filtro quanta grana mettere e dove
+   la polvere è trascinata. L'intensità è misurata sull'originale: grana piena sul corpo della A,
+   polvere liscia e a scie nel fiume.
+5. **Motore polvere** (`#agoraDustFx`): il filtro che genera e muove la polvere.
 
 | Nodo / attributo | Effetto |
 |---|---|
-| `#agoraGrainNoise` `baseFrequency` | dimensione del grano: più basso = grana più grossa (0.45 = originale) |
-| `#agoraGrainNoise` `numOctaves` | ricchezza della grana (1 = pulita, 3-4 = più "sporca") |
-| `#agoraGrainNoise` `seed` | cambia il disegno della grana a parità di statistica |
-| `feColorMatrix result="grain"` | il primo numero della matrice è l'**intensità** della grana (1.65) |
+| `#agoraGrainNoise` `baseFrequency` | dimensione del grano: più basso = grana più grossa |
+| `#agoraGrainNoise` `numOctaves` / `seed` | ricchezza della grana / disegno della grana a parità di statistica |
+| `feColorMatrix result="grain"` | il primo numero della matrice è l'**intensità** della grana (1.8) |
+| `#agoraStreakNoise` `baseFrequency` | forma delle scie (x basso = scie lunghe, y alto = scie sottili) |
+| `feColorMatrix result="streak"` | intensità delle scie (1.2) |
+| `#agoraSweep` `scale` | quanto la grana viene piegata e trascinata dal flusso |
+| `#agoraGrainMapBlur` `stdDeviation` | morbidezza del passaggio tra zone granulose e zone lisce |
 | `#agoraSpeckNoise` + `slope`/`intercept` | dimensione, densità e soglia dei granelli sparsi |
+| `#agoraSpeckGain` `slope` | luminosità dei granelli (0 = spenti) |
+| `#agoraHalo` `stdDeviation` | quanto i granelli si disperdono oltre la luce (solo nella zona morbida) |
 | `#agoraDisplace` `scale` | turbolenza che deforma il logo (0 fermo · 3-6 respiro · 20+ dissolve) |
 | `#agoraFlowNoise` `baseFrequency` | scala del vortice di flusso |
-| `#agoraGrainShift` `dx`/`dy` | scorrimento della polvere sulla superficie |
-| `feComponentTransfer result="toned"` | contrasto ed esposizione del chiaroscuro |
+| `#agoraGrainShift` `dx`/`dy` · `#agoraStreakShift` `dx` | scorrimento di grana e scie |
+| `#agoraTone` | contrasto ed esposizione del chiaroscuro |
 | `#agoraSoften` / `#agoraBloom` `stdDeviation` | morbidezza della luce · diffusione dell'alone |
 
 ### Animazioni
 
-Cinque `<animate>` SMIL, ognuna con id, dentro `#agoraDustFx`:
+Sei `<animate>` SMIL, ognuna con id, dentro `#agoraDustFx`:
 
 | id | Cosa fa | Durata |
 |---|---|---|
 | `#agoraBoil` | la grana "vive" (come la grana pellicola) | 1.1 s |
 | `#agoraDriftX` / `#agoraDriftY` | la polvere scorre sulla superficie | 26 s / 37 s |
-| `#agoraSwirl` | turbolenza che deforma dolcemente | 17 s |
+| `#agoraStream` | le scie scorrono lungo il fiume | 19 s |
+| `#agoraSwirl` | la polvere si piega nel flusso | 17 s |
 | `#agoraFlow` | il campo di flusso cambia forma | 23 s |
 
 Per fermarle: usa il file `-static`, elimina i tag `<animate>`, oppure da JS
@@ -115,8 +126,9 @@ nel sistema operativo vede già la versione ferma.
 ### Laboratorio
 
 `agora-dust-lab.html`, doppio click, funziona offline: tinta o gradiente a 3 colori con
-angolo, inversione chiaro/scuro, fondo (anche trasparente), tutti i parametri della polvere,
-velocità e interruttori delle animazioni, export SVG e PNG 2048.
+angolo, inversione chiaro/scuro, fondo (anche trasparente), tutti i parametri della polvere
+(grana, scie, trascinamento, granelli e loro dispersione), velocità e interruttori delle
+animazioni, export SVG e PNG 2048.
 
 ## Fedeltà rispetto alle immagini caricate
 
@@ -125,17 +137,32 @@ Render in Chromium alla stessa risoluzione delle immagini, confronto pixel per p
 **Logo pulito** — errore medio **0.67/255** (0.26%), IoU **0.997** sul tracciato fedele;
 la versione corretta se ne discosta dove la lettera è stata resa simmetrica (voluto).
 
-**Logo dust** — errore medio **4/255** (1.6%) rispetto all'immagine: la differenza in più è la
-correzione voluta della lettera. Distribuzione della luce (dopo sfocatura)
-errore **0.006** su scala 0-1 dentro la sagoma. Statistica della grana per fascia di luminosità:
+**Logo dust**: errore medio **3,7/255** (1,5%) rispetto all'immagine; la differenza in più è
+la correzione voluta della lettera. Luce dopo sfocatura (σ 8): scarto quadratico **0,034** su
+scala 0-1. Grana per fascia di luminosità (deviazione standard del dettaglio fine):
 
 | luminosità | 0.1 | 0.2 | 0.4 | 0.5 | 0.7 | 0.8 | 0.95 |
 |---|---|---|---|---|---|---|---|
-| originale | 0.084 | 0.125 | 0.158 | 0.179 | 0.139 | 0.077 | 0.021 |
-| SVG | 0.090 | 0.106 | 0.148 | 0.188 | 0.145 | 0.078 | 0.024 |
+| originale | 0.073 | 0.140 | 0.190 | 0.179 | 0.140 | 0.077 | 0.021 |
+| SVG | 0.057 | 0.121 | 0.174 | 0.164 | 0.127 | 0.097 | 0.046 |
 
 La polvere è generata proceduralmente (per questo si muove e si ricolora): non è una copia
-pixel per pixel, ma ha grana, intensità per fascia e densità di granelli dell'originale.
+pixel per pixel, ma ha grana, intensità per zona e scie dell'originale.
+
+### Polvere v4: cosa è stato corretto
+
+- **Linee nere/grigie tra polvere e bianco.** Venivano da tre cose: la luce prolungata oltre la
+  sagoma anche dove nell'originale sfuma (fiume, bandiera), che creava bande grigie tagliate
+  di netto; la grana del filtro che si mescolava ai bordi semitrasparenti e disegnava un filo
+  grigio lungo il contorno; un filo chiaro lungo la base tra le gambe. Ora la luce viene
+  prolungata solo sui bordi netti della A e la superficie è resa opaca prima della grana.
+  Il filo lungo la base non c'è più.
+- **Macchia scura netta al centro** (sotto la traversa): i livelli di luce erano troppo radi
+  negli scuri. Ora i livelli sono più fitti nelle ombre e la luce è più morbida.
+- **Troppo netto, poco naturale.** La grana era uguale ovunque, quindi sembrava rumore. Ora è
+  piena sul corpo della A e diventa polvere liscia, trascinata a scie lungo il fiume, come
+  nell'originale. I granelli escono dalla lettera solo dove la luce sfuma, non dai bordi netti.
+- `--dust: 0` ora dà davvero la superficie pulita (prima faceva sparire il logo).
 
 ## Come sono stati ricostruiti
 
@@ -146,7 +173,10 @@ pixel per pixel, ma ha grana, intensità per fascia e densità di granelli dell'
 4. Lettera resa simmetrica con una trasformazione analitica (shear + correzione della gamba),
    tratti dritti e spigoli riportati su rette e coordinate esatte, stessa trasformazione
    applicata al campo luminoso della versione dust.
-5. Polvere ricostruita misurando autocorrelazione, spettro e statistica del rumore dell'originale.
+5. Polvere ricostruita misurando autocorrelazione, spettro e statistica del rumore dell'originale;
+   la luce corretta viene deformata come immagine (non come tracciati) per non creare pieghe,
+   e l'intensità della grana è misurata zona per zona (`src/light_v4.py`, `src/kmap_v4.py`,
+   `src/emit_v4.py`, `src/build_v4.py`).
 6. Ogni passaggio verificato rendendo l'SVG in Chromium e confrontandolo con l'immagine.
 
 Script, immagini sorgente e dati geometrici in `src/`.
