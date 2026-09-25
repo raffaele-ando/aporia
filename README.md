@@ -14,13 +14,15 @@ destra (la "bandiera"). L'intro racconta proprio questo, in poco tempo:
 
 | tempo | cosa succede |
 |---|---|
-| 0 – 0,15 s | nero |
-| 0,15 – 0,9 s | la polvere compare dal nero; prima folata |
-| 0,75 – 2,0 s | seconda folata: la polvere si posa e costruisce una **A pulita**, da sinistra a destra |
-| 2,2 – 3,4 s | una folata attraversa la lettera: la polvere del fiume e delle ombre si solleva e vola a destra, una parte si deposita nella bandiera, il resto si disperde. Il risultato è esattamente il logo |
-| 3,4 – 3,75 s | il logo resta |
-| 3,75 – 4,6 s | ultima folata: il logo si sgretola da sinistra a destra |
-| 4,45 – 5,2 s | compare la home: "Aporia" |
+| 0 – 0,3 s | nero |
+| 0,3 – 1,0 s | la polvere compare dal nero, già mossa dal vento |
+| 0,75 – 2,25 s | una folata la raccoglie e costruisce una **A pulita**, da sinistra a destra |
+| 1,85 – 3,3 s | mentre a destra la A si completa, a sinistra il vento inizia già a scavare il fiume: la polvere si solleva, una parte si posa nella bandiera, il resto vola via a pennacchio. Il risultato è esattamente il logo |
+| 3,5 – 4,4 s | l'ultima folata sgretola il logo da sinistra a destra |
+| 4,3 – 5,05 s | compare la home: "Aporia" |
+
+Non ci sono pause: sotto le folate soffia sempre un vento di fondo e le fasi si accavallano,
+come un'unica raffica che crea e poi porta via.
 
 - Click, tocco o un tasto qualsiasi durante l'intro: si salta subito alla home.
 - Doppio click sulla scritta "Aporia": si rivede l'apertura.
@@ -66,11 +68,15 @@ Dopo una modifica: `python src/build.py` rigenera `index.html`.
 - **Uscita**: una maschera con fronte frastagliato scorre sul logo; lungo il fronte ogni punto del
   logo diventa un granello con un suo peso (i più leggeri volano via prima), quindi la polvere si
   allunga e si disperde invece di muoversi a blocco.
+- **Granelli spinti dal vento, non su binari**: ogni granello del fiume parte quando la folata lo
+  raggiunge e segue il vento (con il suo peso: i leggeri volano di più); quelli che si posano
+  vengono frenati solo alla fine, verso il loro punto.
 - **Fluidità su ogni dispositivo**:
   - il tempo dell'animazione avanza al massimo di 1/20 s per fotogramma, quindi su un dispositivo
     lento rallenta un attimo ma non salta mai delle fasi;
-  - la quantità di polvere si adatta ai fotogrammi reali: se il dispositivo fatica si usa meno
-    polvere e, all'avvio, una risoluzione più bassa;
+  - prima di partire (a schermo nero) una prova di velocità sceglie risoluzione e quantità di
+    polvere: durante l'intro non si ridimensiona mai nulla;
+  - se poi il dispositivo fatica, la polvere in più sfuma piano invece di sparire di colpo;
   - le immagini del logo vengono decodificate all'avvio, a schermo ancora nero.
 
 Se cambia il logo: `python src/render_logo.py` (fotografa il logo), `python src/prep_morph.py`

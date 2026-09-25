@@ -56,19 +56,20 @@
 
   // ---- tempi (secondi) --------------------------------------------------
   const T = {
-    dustIn: [0.15, 0.9],    // la polvere compare dal nero
-    form: [1.3, 2.0],       // la polvere costruisce la A pulita
-    carve: [2.2, 3.4],      // una folata scava il fiume e trascina la polvere nella bandiera
-    exit: [3.75, 4.6],      // il vento porta via il logo, da sinistra a destra
-    home: [4.45, 5.2],
-    end: 5.3,
+    dustIn: [0.3, 1.0],     // la polvere compare dal nero
+    form: [1.3, 2.05],      // la polvere costruisce la A pulita
+    carve: [1.85, 3.3],     // intanto il vento scava il fiume (a sinistra mentre a destra la A si completa)
+    exit: [3.5, 4.4],       // il vento porta via il logo, da sinistra a destra
+    home: [4.3, 5.05],
+    end: 5.15,
   };
   // folate di vento: inizio, durata, forza, angolo (gradi), tempo per attraversare lo schermo
+  // folate che si sovrappongono (sopra un vento di fondo che non si ferma mai)
   const GUSTS = [
-    { t0: 0.2, dur: 0.9, str: 1.0, ang: -6, cross: 0.35 },
-    { t0: 0.75, dur: 1.2, str: 1.6, ang: -12, cross: 0.35 },
-    { t0: 2.05, dur: 1.5, str: 1.3, ang: -3, cross: 0.4 },
-    { t0: 3.6, dur: 1.6, str: 1.2, ang: -8, cross: 0.35 },
+    { t0: 0.25, dur: 1.5, str: 0.8, ang: -6, cross: 0.35 },
+    { t0: 0.75, dur: 1.8, str: 1.5, ang: -12, cross: 0.35 },
+    { t0: 1.7, dur: 2.0, str: 1.25, ang: -3, cross: 0.4 },
+    { t0: 3.3, dur: 2.2, str: 1.2, ang: -8, cross: 0.35 },
   ].map(g => ({ ...g, c: Math.cos(g.ang*Math.PI/180), s: Math.sin(g.ang*Math.PI/180) }));
 
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -116,7 +117,7 @@
   })();
 
   // ---- misure -------------------------------------------------------------
-  let W = 0, H = 0, DPR = 1, DPR_MAX = 2, VS = 1, box = { x: 0, y: 0, s: 1 };
+  let W = 0, H = 0, DPR = 1, DPR_MAX = 2, VS = 1, box = { x: 0, y: 0, s: 1 }, lastBuild = 0;
   const lc = document.createElement('canvas'), lcc = lc.getContext('2d');   // logo che si sgretola
   const lc2 = document.createElement('canvas'), lcc2 = lc2.getContext('2d');
   const lc3 = document.createElement('canvas'), lcc3 = lc3.getContext('2d');
@@ -137,8 +138,10 @@
     lc.width = Math.max(1, Math.round(UW*box.s*DPR)); lc.height = Math.max(1, Math.round(VH*box.s*DPR));
     lc2.width = lc3.width = lc.width; lc2.height = lc3.height = lc.height;
     // la maschera si calcola a metà risoluzione (preparazione leggera anche sui telefoni)
+    const c0 = performance.now();
     buildFront(mk, Math.max(4, 7*box.s*DPR));           // uscita: fronte netto e frastagliato
     buildFront(mk2, Math.max(10, 38*box.s*DPR));        // folata del fiume: la polvere si solleva piano
+    lastBuild = (performance.now() - c0)/Math.max(1, mk.width*mk.height*2/1e5);   // ms ogni 100k pixel
   }
   function buildFront(mk, soft) {
     const w = Math.max(1, lc.width >> 1), h = Math.max(1, lc.height >> 1);
@@ -207,7 +210,9 @@
   // vento nel punto (x,y) al tempo t: folate che attraversano lo schermo + turbolenza
   const f = [0, 0, 0];
   function flow(x, y, t) {
-    let gx = 0, gy = 0, g = 0;
+    // vento di fondo: sempre presente, con intensità che cambia piano
+    const base = (0.22 + 0.2*noise(t*0.5, 3.3))*smooth(0.05, 0.8, t);
+    let gx = base*0.998, gy = -base*0.06, g = base*0.5;
     for (let i = 0; i < GUSTS.length; i++) {
       const G = GUSTS[i], local = t - G.t0 - (x/W)*G.cross;
       if (local <= 0 || local >= G.dur) continue;
@@ -266,6 +271,7 @@
                 * (1 - smooth(T.exit[1] - 0.4, T.home[1], t));
 
     // polvere nell'aria
+    let dead = false;
     for (let i = 0; i < ambient.length; i++) {
       const p = ambient[i];
       flow(p.x, p.y, t);
@@ -276,11 +282,13 @@
         p.x = Math.random()*W; p.y = Math.random()*H; p.born = t;
         flow(p.x, p.y, t); p.vx = f[0]; p.vy = f[1];
       }
-      const a = p.a*dustA*smooth(T.dustIn[0] + p.delay, T.dustIn[0] + p.delay + 0.4, t)
+      if (p.die && t - p.die > 0.5) { dead = true; continue; }
+      const a = (p.die ? 1 - (t - p.die)/0.5 : 1)*p.a*dustA*smooth(T.dustIn[0] + p.delay, T.dustIn[0] + p.delay + 0.5, t)
               * (p.born ? smooth(p.born, p.born + 0.6, t) : 1);
       const sp = Math.hypot(p.vx, p.vy) || 1, len = Math.min(4 + 22*VS, 0.4 + sp*0.028);
       queue(p.x - p.vx/sp*len, p.y - p.vy/sp*len, p.x, p.y, a, p.big);
     }
+    if (dead) ambient = ambient.filter(p => !p.die || t - p.die <= 0.5);
 
     // la seconda folata raccoglie la polvere che forma il logo
     if (!formed && t >= GUSTS[1].t0 + 0.1 && solidTargets.length) {
@@ -335,12 +343,11 @@
     const xp = clamp((t - T.exit[0])/(T.exit[1] - T.exit[0]), 0, 1);
     const fill = smooth(T.form[1] - 0.25, T.form[1] + 0.2, t);
     const mkAt = (c, cv, F) => c.drawImage(mk2, (F - U0)*cv.width/UW - cv.width, 0, 2*cv.width, cv.height);
+    if (fill > 0 && fill < 1) { acc.globalAlpha = fill*0.25; acc.fillStyle = '#fff'; acc.fillRect(0, 0, ac.width, ac.height); acc.globalAlpha = 1; }
     if (t < T.carve[0]) {
       // 1) la A pulita si vede solo dove la polvere si è posata; alla fine la maschera si chiude
       if (fill >= 1) lctx.drawImage(IMG.S, x, y, w, h);
       else if (t > T.form[0] - 0.8) {
-        if (fill > 0) { acc.globalAlpha = fill*0.25; acc.fillStyle = '#fff'; acc.fillRect(0, 0, ac.width, ac.height); }
-        acc.globalAlpha = 1;
         lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.clearRect(0, 0, lc.width, lc.height);
         lcc.drawImage(IMG.S, 0, 0, lc.width, lc.height);
         lcc.globalCompositeOperation = 'destination-in';
@@ -351,13 +358,14 @@
     } else if (xp <= 0 && t < T.carve[1]) {
       // 2) la folata attraversa la lettera: dove passa, la polvere del fiume si solleva (S → Bstay)
       //    e quella trascinata compare dove si deposita (Bmove attraverso la maschera degli arrivi)
-      const cf = clamp((t - T.carve[0])/0.7, 0, 1), F = U0 - 60 + (UW + 120)*cf;
+      const cf = clamp((t - T.carve[0])/0.9, 0, 1), F = U0 - 60 + (UW + 120)*cf;
       carveFront = F;
       const endFill = smooth(T.carve[1] - 0.3, T.carve[1], t);
       if (endFill > 0) { acc2.globalAlpha = endFill*0.3; acc2.fillStyle = '#fff'; acc2.fillRect(0, 0, ac2.width, ac2.height); acc2.globalAlpha = 1; }
       lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.clearRect(0, 0, lc.width, lc.height);
       lcc.drawImage(IMG.S, 0, 0, lc.width, lc.height);
       lcc.globalCompositeOperation = 'destination-in'; mkAt(lcc, lc, F);
+      if (fill < 1) lcc.drawImage(ac, 0, 0, lc.width, lc.height);   // a destra la A si sta ancora formando
       lcc.globalCompositeOperation = 'source-over';
       lcc2.clearRect(0, 0, lc2.width, lc2.height);
       lcc2.drawImage(IMG.Bstay, 0, 0, lc2.width, lc2.height);
@@ -396,38 +404,45 @@
       }
     }
 
-    // granelli sollevati dalla folata: partono quando il fronte li raggiunge, volano col vento,
-    // una parte si deposita nella bandiera e sui bordi del fiume, il resto viene portato via
-    if (t >= T.carve[0] && t < T.carve[1] + 1.0) {
+    // granelli sollevati dal vento: partono quando la folata li raggiunge e sono spinti dal vento
+    // (niente percorsi prestabiliti); quelli che si posano vengono frenati solo alla fine
+    if (t >= T.carve[0] && t < T.carve[1] + 1.2) {
       const subs = budget > 0.7 ? 3 : budget > 0.45 ? 2 : 1;
       const keepAway = 0.75*budget;                     // su dispositivi lenti meno polvere portata via
       for (let i = 0; i < MV.length; i++) {
         const m = MV[i];
-        if (m.away && m.keep > keepAway) continue;
+        if (m.done === 2 || (m.away && m.keep > keepAway)) continue;
         if (!m.t0) {
           if (t < T.carve[1] && m.su <= carveFront + RAG[Math.min(255, (m.sv/1254*256)|0)]*1254) {
             m.t0 = t; m.x = m.su; m.y = m.sv;
+            m.vx = 140 + m.a*220; m.vy = -45 + (m.ph % 1)*60;        // strappo iniziale
           } else continue;
         }
-        const tau = (t - m.t0)/m.dur;
-        if (tau > 1.25) continue;
-        const e = tau < 1 ? (1 - Math.cos(Math.PI*clamp(tau, 0, 1)))/2 : 1, bell = Math.sin(Math.PI*clamp(tau, 0, 1));
+        const age = t - m.t0;
+        flow(box.x + m.x*box.s, box.y + m.y*box.s, t);
+        const wu = f[0]/VS*0.62, wv = f[1]/VS*0.62;                  // vento, in unità del logo
+        const drag = 2.2 + m.a*2.5;                                   // i granelli leggeri seguono di più il vento
+        let s2 = 0;
+        if (!m.away) { const q = smooth(0.12, m.dur + 0.15, age); s2 = q*q; }
+        let ax = (wu - m.vx)*drag*(1 - s2), ay = (wv - m.vy)*drag*(1 - s2) - 25*(1 - s2);
+        if (s2 > 0) { ax += (m.tu - m.x)*42*s2 - m.vx*11*s2; ay += (m.tv - m.y)*42*s2 - m.vy*11*s2; }
+        m.vx += ax*dt; m.vy += ay*dt;
+        const ox0 = m.x, oy0 = m.y;
+        m.x += m.vx*dt; m.y += m.vy*dt;
+        const life = m.away ? m.dur + 0.5 : m.dur + 0.9;
+        const alpha = 0.55*m.a*Math.min(1, age*5)*(m.away ? 1 - smooth(life*0.4, life, age) : 1 - smooth(m.dur, life, age));
+        const spread = m.away ? 8 + 120*clamp(age/life, 0, 1) : 14*(1 - s2);
         const n1 = noise(m.ph, t*1.1) - 0.5, n2 = noise(m.ph + 7, t*1.3) - 0.5;
-        const nx = m.su + (m.tu - m.su)*e + n1*46*bell;
-        const ny = m.sv + (m.tv - m.sv)*e - 22*bell + n2*30*bell;
-        const alpha = 0.55*m.a*Math.min(1, tau*5)*(m.away ? 1 - smooth(0.35, 1, tau) : 1 - smooth(0.9, 1.25, tau));
-        // la polvere portata via si allarga man mano (si disperde nell'aria), quella che si posa si ricompatta
-        const spread = m.away ? 10 + 110*clamp(tau, 0, 1) : 14*bell;
         for (let j = 0; j < subs; j++) {
-          // ogni sotto-granello ha una sua direzione fissa: la nuvola si apre senza altro rumore da calcolare
           const ox = (SUB[j][0] + n2*0.5)*spread*0.6, oy = (SUB[j][1] + n1*0.5)*spread;
-          queue(box.x + (m.x + ox)*box.s, box.y + (m.y + oy)*box.s, box.x + (nx + ox)*box.s, box.y + (ny + oy)*box.s, alpha, j === 0 && m.a > 0.75);
+          queue(box.x + (ox0 + ox)*box.s, box.y + (oy0 + oy)*box.s, box.x + (m.x + ox)*box.s, box.y + (m.y + oy)*box.s, alpha, j === 0 && m.a > 0.75);
         }
-        if (!m.away) {
-          if (tau > 0.7 && tau < 1) deposit(nx, ny, 0.05, 11, acc2);         // polvere che si posa lungo l'arrivo
-          if (tau >= 1 && !m.done) { m.done = 1; deposit(m.tu, m.tv, 0.85, 17, acc2); }
+        if (!m.away && !m.done) {
+          const d = Math.hypot(m.tu - m.x, m.tv - m.y);
+          if (s2 > 0.3 && d < 40) deposit(m.x, m.y, 0.05, 11, acc2);   // polvere che si posa arrivando
+          if ((s2 > 0.5 && d < 6) || age > m.dur + 0.7) { m.done = 1; deposit(m.tu, m.tv, 0.85, 17, acc2); }
         }
-        m.x = nx; m.y = ny;
+        if (age > life) m.done = 2;
       }
     }
 
@@ -473,9 +488,8 @@
       if (med > 0.022 && budget > 0.2) {
         const k = med > 0.07 ? 0.45 : med > 0.04 ? 0.6 : 0.8;
         budget *= k;
-        ambient.length = Math.round(ambient.length*k);
-        if (blown.length > 400) blown.length = Math.round(blown.length*k);
-        if (t < T.form[0] && DPR > 1) { DPR_MAX = med > 0.04 ? 1 : 1.5; resize(); }
+        // la polvere in più sfuma (niente sparizioni di colpo, niente ridimensionamenti a metà)
+        for (let i = Math.round(ambient.length*k); i < ambient.length; i++) if (!ambient[i].die) ambient[i].die = t;
       }
       slow.length = 0;
     }
@@ -501,6 +515,11 @@
     MV.forEach(m => { m.t0 = 0; m.done = 0; }); t = 0; last = 0; slow = []; budget = 1; DPR_MAX = 2;
     targets.forEach(tg => { tg.gone = false; });
     resize();
+    // prova di velocità prima di partire (a schermo nero): su un dispositivo lento si parte subito
+    // leggeri, così durante l'intro non serve mai ridimensionare né togliere polvere di colpo
+    if (lastBuild > 6 && DPR > 1) {
+      DPR_MAX = lastBuild > 10 ? 1 : 1.5; budget = lastBuild > 10 ? 0.55 : 0.75; resize();
+    }
     makeAmbient(Math.round(clamp(W*H/340, 1100, 3400)*budget));
     lctx.clearRect(0, 0, W, H); ctx.clearRect(0, 0, W, H);
     running = true;
@@ -520,7 +539,9 @@
   intro.addEventListener('pointerdown', skip);
   window.addEventListener('keydown', e => { if (running && !e.metaKey && !e.ctrlKey) skip(); });
   title.addEventListener('dblclick', () => { if (!running) play(); });   // doppio click: rivedi l'apertura
-  window.addEventListener('resize', () => { if (running) resize(); });
+  // durante l'intro si ridimensiona solo se cambia davvero lo schermo (rotazione), non per la barra
+  // dell'indirizzo che compare e scompare sui telefoni
+  window.addEventListener('resize', () => { if (running && Math.abs(window.innerWidth - W) > W*0.2) resize(); });
 
   ready.then(() => { sampleLogo(); play(); });
 })();
