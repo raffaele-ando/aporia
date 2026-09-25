@@ -1,0 +1,213 @@
+{
+ "gradient": [
+  "#ff8a3d",
+  "#ff2e63",
+  "#4d5bff"
+ ],
+ "files": [
+  {
+   "file": "aporia-intro-16x9-101014-su-f2efe9.mp4",
+   "format": "16:9",
+   "color": "101014",
+   "colorName": "Nero",
+   "type": "mp4",
+   "transparent": false,
+   "background": "f2efe9",
+   "fps": 60,
+   "mb": 1.7,
+   "poster": "anteprime/aporia-intro-16x9-101014-su-f2efe9.jpg"
+  },
+  {
+   "file": "aporia-intro-16x9-ffffff-su-nero.mp4",
+   "format": "16:9",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 2.1,
+   "poster": "anteprime/aporia-intro-16x9-ffffff-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-16x9-ffffff-trasparente.mov",
+   "format": "16:9",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mov",
+   "transparent": true,
+   "background": null,
+   "fps": 30,
+   "mb": 33.8,
+   "poster": "anteprime/aporia-intro-16x9-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-16x9-ffffff-trasparente.webm",
+   "format": "16:9",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 1.5,
+   "poster": "anteprime/aporia-intro-16x9-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-16x9-gradiente-su-nero.mp4",
+   "format": "16:9",
+   "color": "gradiente",
+   "colorName": "Gradiente",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 0.9,
+   "poster": "anteprime/aporia-intro-16x9-gradiente-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-16x9-gradiente-trasparente.webm",
+   "format": "16:9",
+   "color": "gradiente",
+   "colorName": "Gradiente",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 1.5,
+   "poster": "anteprime/aporia-intro-16x9-gradiente-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-1x1-ffffff-su-nero.mp4",
+   "format": "1:1",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 2.8,
+   "poster": "anteprime/aporia-intro-1x1-ffffff-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-1x1-ffffff-trasparente.webm",
+   "format": "1:1",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 2.3,
+   "poster": "anteprime/aporia-intro-1x1-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-4x5-ffffff-su-nero.mp4",
+   "format": "4:5",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 3.0,
+   "poster": "anteprime/aporia-intro-4x5-ffffff-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-4x5-ffffff-trasparente.webm",
+   "format": "4:5",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 2.4,
+   "poster": "anteprime/aporia-intro-4x5-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-101014-su-f2efe9.mp4",
+   "format": "9:16",
+   "color": "101014",
+   "colorName": "Nero",
+   "type": "mp4",
+   "transparent": false,
+   "background": "f2efe9",
+   "fps": 60,
+   "mb": 2.9,
+   "poster": "anteprime/aporia-intro-9x16-101014-su-f2efe9.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-101014-trasparente.webm",
+   "format": "9:16",
+   "color": "101014",
+   "colorName": "Nero",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 2.4,
+   "poster": "anteprime/aporia-intro-9x16-101014-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-ffffff-su-nero.mp4",
+   "format": "9:16",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 3.3,
+   "poster": "anteprime/aporia-intro-9x16-ffffff-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-ffffff-trasparente.mov",
+   "format": "9:16",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "mov",
+   "transparent": true,
+   "background": null,
+   "fps": 30,
+   "mb": 43.7,
+   "poster": "anteprime/aporia-intro-9x16-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-ffffff-trasparente.webm",
+   "format": "9:16",
+   "color": "ffffff",
+   "colorName": "Bianco",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 2.4,
+   "poster": "anteprime/aporia-intro-9x16-ffffff-trasparente.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-gradiente-su-nero.mp4",
+   "format": "9:16",
+   "color": "gradiente",
+   "colorName": "Gradiente",
+   "type": "mp4",
+   "transparent": false,
+   "background": "nero",
+   "fps": 60,
+   "mb": 1.4,
+   "poster": "anteprime/aporia-intro-9x16-gradiente-su-nero.jpg"
+  },
+  {
+   "file": "aporia-intro-9x16-gradiente-trasparente.webm",
+   "format": "9:16",
+   "color": "gradiente",
+   "colorName": "Gradiente",
+   "type": "webm",
+   "transparent": true,
+   "background": null,
+   "fps": 60,
+   "mb": 2.4,
+   "poster": "anteprime/aporia-intro-9x16-gradiente-trasparente.jpg"
+  }
+ ]
+}

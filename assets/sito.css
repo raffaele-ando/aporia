@@ -1,0 +1,18 @@
+/* barra di navigazione comune a tutte le pagine del sito (un solo mondo visivo, scuro) */
+.sitenav {
+  display: flex; align-items: baseline; gap: 4px 18px; flex-wrap: wrap;
+  font: 500 11.5px/1 "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.sitenav a { color: #8e8a84; text-decoration: none; padding: 8px 0; -webkit-tap-highlight-color: transparent; }
+.sitenav a:hover, .sitenav a:focus-visible { color: #ece8e1; }
+.sitenav a:focus-visible { outline: 1px solid #ece8e1; outline-offset: 3px; }
+.sitenav a[aria-current="page"] { color: #ece8e1; }
+.sitenav .brand {
+  font: 400 22px/1 "Italiana", "Didot", "Bodoni 72", "Times New Roman", serif; letter-spacing: .12em; text-transform: none;
+  color: #ece8e1; margin-right: auto;
+}
+@media (max-width: 480px) {
+  .sitenav { gap: 4px 12px; font-size: 10.5px; letter-spacing: .08em; }
+  .sitenav .brand { font-size: 20px; letter-spacing: .1em; }
+}

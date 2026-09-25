@@ -1,11 +1,11 @@
-"""Fotografa il logo dust (dall'SVG vero, ../agora_loghi_svg) in due fotogrammi con grana diversa.
+"""Fotografa il logo dust (dall'SVG vero, copiato in src/logo/) in due fotogrammi con grana diversa.
 Il logo nell'intro è un'immagine: nessun filtro SVG da calcolare durante l'animazione, quindi niente
 blocchi sui telefoni e nessun tremolio su Safari/iPad."""
 import pathlib, re, io, base64, json
 from PIL import Image
 from playwright.sync_api import sync_playwright
 root = pathlib.Path(__file__).resolve().parent.parent
-svg0 = (root.parent/'agora_loghi_svg'/'agora-logo-dust-static.svg').read_text()
+svg0 = (root/'src'/'logo'/'agora-logo-dust-static.svg').read_text()
 K = 1.15                                   # pixel per unità del viewBox
 U0, V0, U1, V1 = 196, 196, 1044, 996       # ritaglio attorno alla lettera (con la polvere che esce)
 CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'

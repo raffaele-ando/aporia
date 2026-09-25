@@ -133,7 +133,9 @@ def splat(acc, px, py, w):
 
 out = root/'assets'; out.mkdir(exist_ok=True)
 name = f'intro-{LAYOUT}' + ('-preview' if PREVIEW else '')
-master = pathlib.Path('/tmp/claude-0/sp')/f'master-{name}.mp4'
+TMP = root/'.tmp'; TMP.mkdir(exist_ok=True)
+# il master (luce piena, crf 16) è la base di src/export.py
+master = (root/'src'/'master'/('luce-verticale.mp4' if LAYOUT == 'portrait' else 'luce-orizzontale.mp4')) if not PREVIEW else TMP/f'master-{name}.mp4'
 ff = __import__('imageio_ffmpeg').get_ffmpeg_exe()
 enc = subprocess.Popen([ff, '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
                         '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', str(master)], stdin=subprocess.PIPE)
@@ -191,7 +193,7 @@ keys = sorted(snap); tw = 300; th = int(tw*H/W); cols = 7
 sheet = Image.new('RGB', (cols*(tw + 4), ((len(keys) + cols - 1)//cols)*(th + 4)), (40, 40, 40))
 for i, k in enumerate(keys):
     sheet.paste(Image.fromarray(snap[k]).resize((tw, th)), ((i % cols)*(tw + 4), (i//cols)*(th + 4)))
-sheet.save(f'/tmp/claude-0/sp/{name}.png')
+sheet.save(TMP/f'{name}.png')
 # versioni per il web
 if not PREVIEW:
     subprocess.run([ff, '-y', '-loglevel', 'error', '-i', str(master), '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '29',

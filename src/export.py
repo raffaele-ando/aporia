@@ -12,7 +12,7 @@ Esempi:
 
 Tipi:
   webm  trasparente (VP9 con alpha): browser, Canva, OBS, siti web. Leggero.
-  mov   trasparente (ProRes 4444): Premiere, Final Cut, DaVinci, After Effects, Keynote, CapCut desktop. Pesante.
+  mov   trasparente (ProRes 4444): Premiere, Final Cut, DaVinci, After Effects, Keynote, CapCut desktop. Pesante (30 fps: 30-45 MB).
   mp4   su fondo pieno (--bg, di default nero): qualsiasi app. Con fondo nero e modalità di
         fusione "Scherma/Screen" (CapCut: Sovrapposizione > Fusione > Schiarisci/Scherma) il nero sparisce.
   png   sequenza di PNG trasparenti in una cartella (universale).
@@ -51,6 +51,23 @@ def ink_layer(args, w, h, orient, cx, cy):
         return C[i]*(1 - f) + C[i + 1]*f
     return np.broadcast_to(hexrgb(args.color), (h, w, 3)).astype(np.float32)
 
+def save_posters(out, encs, ink, a, bgc, w, h):
+    """un fotogramma come anteprima per il sito (i trasparenti sopra una scacchiera)"""
+    from PIL import Image
+    d = out/'anteprime'; d.mkdir(exist_ok=True)
+    tw = 360 if w <= h else 640; th = round(h*tw/w)
+    for k, (_, path) in encs.items():
+        if k == 'mp4':
+            img = ink*a + bgc*(1 - a)
+        else:
+            dark = float(np.mean(ink)) > 128        # polvere chiara: scacchiera scura, e viceversa
+            c1, c2 = ((46, 44, 40), (31, 29, 26)) if dark else ((242, 239, 233), (220, 216, 208))
+            yy, xx = np.mgrid[0:h, 0:w]
+            chk = np.where((((xx//40) + (yy//40)) % 2)[..., None] == 0, np.array(c1, np.float32), np.array(c2, np.float32))
+            img = ink*a + chk*(1 - a)
+        im = Image.fromarray(img.clip(0, 255).astype(np.uint8)).resize((tw, th), Image.LANCZOS)
+        im.save(d/(path.stem + '.jpg'), quality=82)
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--color', default='#ffffff', help='colore della polvere')
@@ -62,6 +79,7 @@ def main():
     ap.add_argument('--types', default='webm,mp4', help='webm,mov,mp4,png')
     ap.add_argument('--name', default=None, help='nome dei file (senza estensione)')
     ap.add_argument('--out', default=str(root/'export'))
+    ap.add_argument('--poster', type=float, default=2.4, help="secondo del fotogramma usato come anteprima (export/anteprime/), -1 per nessuna")
     args = ap.parse_args()
     types = [t.strip() for t in args.types.split(',') if t.strip()]
     orient, (cx, cy, w, h) = FORMATS[args.format]
@@ -77,7 +95,7 @@ def main():
     if 'webm' in types:
         enc('webm', 'rgba', ['-c:v', 'libvpx-vp9', '-pix_fmt', 'yuva420p', '-b:v', '0', '-crf', '34', '-row-mt', '1', '-auto-alt-ref', '0', '-an'], out/f'{tag}-trasparente.webm')
     if 'mov' in types:
-        enc('mov', 'rgba', ['-c:v', 'prores_ks', '-profile:v', '4444', '-alpha_bits', '16', '-vendor', 'apl0', '-pix_fmt', 'yuva444p10le', '-an'], out/f'{tag}-trasparente.mov')
+        enc('mov', 'rgba', ['-c:v', 'prores_ks', '-profile:v', '4444', '-alpha_bits', '8', '-vendor', 'apl0', '-pix_fmt', 'yuva444p10le', '-an'], out/f'{tag}-trasparente.mov')
     if 'mp4' in types:
         name = 'su-' + ('nero' if bg is None or tuple(bg) == (0, 0, 0) else args.bg.lstrip('#').lower())
         enc('mp4', 'rgb24', ['-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an'], out/f'{tag}-{name}.mp4')
@@ -104,6 +122,8 @@ def main():
         if 'mp4' in encs:
             rgb = (ink*a + bgc*(1 - a)).clip(0, 255).astype(np.uint8)
             encs['mp4'][0].stdin.write(rgb.tobytes())
+        if n == round(args.poster*args.fps):
+            save_posters(out, encs, ink, a, bgc, w, h)
         n += 1
     for p, path in encs.values():
         p.stdin.close(); p.wait()

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aporia · Download</title>
+<meta name="theme-color" content="#0a0908">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23000%22/%3E%3Cpath d=%22M7 25 14 7h4l7 18h-4.5L16 13l-4.5 12z%22 fill=%22%23ece8e1%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/sito.css">
+<style>
+  /* download dell'intro: stesso mondo scuro del laboratorio, colori sempre espliciti */
+  :root {
+    color-scheme: dark;
+    --bg: #0a0908; --panel: #12110f; --line: #2a2823; --paper: #ece8e1; --dim: #8e8a84;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--paper); font: 14px/1.5 var(--sans); }
+  body { padding: 16px 16px 48px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 26px 0 8px; font: 400 clamp(30px, 6vw, 44px)/1.05 "Italiana", "Didot", "Times New Roman", serif; letter-spacing: .06em; }
+  h2 { margin: 36px 0 12px; font: 400 24px/1.1 "Italiana", serif; letter-spacing: .06em; }
+  .lead { margin: 0; color: var(--dim); max-width: 62ch; text-wrap: pretty; }
+  .lead b, .tip b { color: var(--paper); font-weight: 500; }
+  a.inline { color: var(--paper); text-underline-offset: 3px; text-decoration-color: #4a463f; }
+
+  /* quale file per quale app */
+  .guide { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .guide th, .guide td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .guide th { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .guide td:first-child { color: var(--paper); font-weight: 500; }
+  .guide td { color: var(--dim); }
+  .guide code { font: 400 12px var(--mono); color: var(--paper); }
+  @media (max-width: 640px) {
+    .guide thead { display: none; }
+    .guide tr { display: grid; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .guide td { border: 0; padding: 2px 0; }
+  }
+  .tip { margin: 16px 0 0; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--dim); font-size: 13.5px; }
+
+  /* file */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+  .tabs button {
+    font: 500 12px/1 var(--sans); color: var(--paper); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .tabs button:hover { border-color: #4a463f; }
+  .tabs button:focus-visible { outline: 1px solid var(--paper); outline-offset: 1px; }
+  .tabs button[aria-pressed="true"] { background: var(--paper); color: #0b0a09; border-color: var(--paper); }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(160px, 45%), 1fr)); }
+  .grid.wide { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+  .card img { display: block; width: 100%; height: auto; background: #000; }
+  .card .body { padding: 10px 12px 12px; display: grid; gap: 8px; align-content: start; }
+  .card h3 { margin: 0; font: 500 13.5px/1.3 var(--sans); }
+  .card .what { margin: 0; color: var(--dim); font-size: 12.5px; line-height: 1.4; }
+  .dl { display: grid; gap: 6px; }
+  .dl a {
+    display: grid; gap: 3px; text-decoration: none;
+    color: #0b0a09; background: var(--paper); border-radius: 7px; padding: 8px 10px; font: 500 12.5px/1.2 var(--sans);
+  }
+  .dl a:hover { background: #fff; }
+  .dl a:focus-visible { outline: 1px solid var(--paper); outline-offset: 2px; }
+  .dl a span { font: 400 11px/1.2 var(--mono); font-variant-numeric: tabular-nums; opacity: .7; }
+  .empty { color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="sitenav" aria-label="Pagine">
+    <a class="brand" href="./#home">Aporia</a>
+    <a href="versioni.html">Versioni</a>
+    <a href="laboratorio.html">Laboratorio</a>
+    <a href="download.html" aria-current="page">Download</a>
+  </nav>
+
+  <h1>L'intro, pronta da usare</h1>
+  <p class="lead">La versione 10 per video, social e presentazioni: da sola, come transizione tra due clip o sopra
+    qualsiasi immagine. <b>I file “trasparente” non hanno fondo</b>: in un'anteprima con fondo bianco la polvere bianca
+    non si vede, ma in un programma di montaggio sta sopra le tue clip. Qui sono mostrati sopra una scacchiera.</p>
+
+  <h2>Quale file</h2>
+  <table class="guide">
+    <thead><tr><th>Dove la usi</th><th>File</th><th>Come</th></tr></thead>
+    <tbody>
+      <tr><td>CapCut, InShot, app sul telefono</td><td><code>su nero · MP4</code></td><td>Sovrapposizione sopra la clip, fusione <b>Scherma</b> (o Schiarisci): il nero sparisce.</td></tr>
+      <tr><td>Stesse app, su clip chiare</td><td><code>su chiaro · MP4</code></td><td>Polvere scura, fusione <b>Moltiplica</b>: sparisce il chiaro.</td></tr>
+      <tr><td>Premiere, Final Cut, DaVinci, After Effects, Keynote</td><td><code>trasparente · MOV</code></td><td>ProRes 4444 con trasparenza vera, 30 fps. Basta metterlo sopra.</td></tr>
+      <tr><td>Canva, siti web, OBS</td><td><code>trasparente · WebM</code></td><td>Trasparenza vera e file leggero. Su iPhone può mostrare solo un fondo bianco: lì usa l'MP4.</td></tr>
+      <tr><td>PowerPoint, Google Presentazioni</td><td><code>su nero · MP4</code></td><td>Su una slide nera: non gestiscono i video trasparenti.</td></tr>
+    </tbody>
+  </table>
+  <p class="tip"><b>Come transizione:</b> metti l'animazione a cavallo del taglio e passa dalla clip A alla clip B intorno a
+    <b>1,4 s</b>, quando la raffica ha portato la polvere al centro; il logo poi vola via sopra la clip nuova.
+    Puoi provarlo nel <a class="inline" href="laboratorio.html">laboratorio</a> (fondo “Transizione tra due clip”), dove
+    si scelgono anche altri colori.</p>
+
+  <h2>File</h2>
+  <div class="tabs" id="tabs" role="group" aria-label="Formato"></div>
+  <div class="grid" id="grid"><p class="empty">Caricamento…</p></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const FMT = { '9:16': '9:16 · Reel, Storie, TikTok', '4:5': '4:5 · post', '1:1': '1:1 · post', '16:9': '16:9 · YouTube, slide' };
+  const grid = document.getElementById('grid'), tabs = document.getElementById('tabs');
+  let files = [], cur = '9:16';
+  const mb = x => String(x).replace('.', ',') + ' MB';
+
+  function render() {
+    [...tabs.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === cur)));
+    grid.className = 'grid' + (cur === '16:9' ? ' wide' : '');
+    grid.textContent = '';
+    // una scheda per colore e fondo; i trasparenti (WebM e MOV) stanno insieme
+    const groups = new Map();
+    for (const f of files.filter(f => f.format === cur)) {
+      const k = f.color + '|' + (f.transparent ? 't' : f.background);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(f);
+    }
+    const rank = ([k]) => ({ ffffff: 0, gradiente: 1 })[k.split('|')[0]] ?? 2;
+    const sorted = [...groups].sort((a, b) => rank(a) - rank(b) || (a[0].endsWith('|t') ? 1 : 0) - (b[0].endsWith('|t') ? 1 : 0));
+    for (const [, list] of sorted) {
+      list.sort((a, b) => ({ webm: 0, mov: 1, mp4: 2 })[a.type] - ({ webm: 0, mov: 1, mp4: 2 })[b.type]);
+      const f0 = list[0], card = document.createElement('article'); card.className = 'card';
+      if (f0.poster) {
+        const img = document.createElement('img'); img.loading = 'lazy'; img.src = 'export/' + f0.poster;
+        img.alt = `Fotogramma: logo ${f0.colorName.toLowerCase()} ${f0.transparent ? 'su fondo trasparente' : 'su fondo pieno'}`;
+        const [w, h] = cur.split(':').map(Number); img.width = 360; img.height = Math.round(360*h/w);
+        card.appendChild(img);
+      }
+      const body = document.createElement('div'); body.className = 'body';
+      const h3 = document.createElement('h3');
+      h3.textContent = `${f0.colorName} · ${f0.transparent ? 'trasparente' : f0.background === 'nero' ? 'su nero' : 'su chiaro'}`;
+      const what = document.createElement('p'); what.className = 'what';
+      what.textContent = f0.transparent ? 'Nessun fondo: da mettere sopra le clip o sulla slide.'
+        : f0.background === 'nero' ? 'Fusione Scherma nelle app del telefono; slide nera in PowerPoint.'
+        : 'Polvere scura su chiaro: fusione Moltiplica.';
+      const dl = document.createElement('div'); dl.className = 'dl';
+      for (const f of list) {
+        const a = document.createElement('a'); a.href = 'export/' + f.file; a.download = f.file;
+        a.textContent = 'Scarica ' + f.type.toUpperCase();
+        const s = document.createElement('span'); s.textContent = `${mb(f.mb)} · ${f.fps} fps`; a.appendChild(s);
+        dl.appendChild(a);
+      }
+      body.append(h3, what, dl); card.appendChild(body); grid.appendChild(card);
+    }
+  }
+
+  fetch('export/pacchetto.json').then(r => { if (!r.ok) throw 0; return r.json(); }).then(j => {
+    files = j.files;
+    for (const f of Object.keys(FMT)) {
+      if (!files.some(x => x.format === f)) continue;
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.f = f; b.textContent = FMT[f];
+      b.addEventListener('click', () => { cur = f; render(); });
+      tabs.appendChild(b);
+    }
+    render();
+  }).catch(() => { grid.innerHTML = '<p class="empty">Elenco dei file non disponibile. I file sono nella cartella <code>export/</code> del progetto.</p>'; });
+})();
+</script>
+</body>
+</html>

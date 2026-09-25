@@ -25,7 +25,7 @@ with sync_playwright() as p:
             # la home "Aporia" la mostra il selettore: nella registrazione resta solo l'animazione
             pg.add_style_tag(content='#home{visibility:hidden!important}')
             pg.wait_for_timeout(400)
-            raw = pathlib.Path('/tmp/claude-0/sp')/f'rec-v{v}-{o}.mp4'
+            (root/'.tmp').mkdir(exist_ok=True); raw = root/'.tmp'/f'rec-v{v}-{o}.mp4'
             enc = subprocess.Popen([ff, '-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', str(FPS), '-c:v', 'mjpeg', '-i', '-',
                                     '-c:v', 'libx264', '-preset', 'fast', '-crf', '14', '-pix_fmt', 'yuv420p', str(raw)], stdin=subprocess.PIPE)
             n = 0; tail = 0; ms = 0

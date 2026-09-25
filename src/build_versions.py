@@ -1,5 +1,6 @@
 """Raccoglie tutte le versioni dell'intro fatte finora (dallo storico git) in versioni/,
-per il selettore della home. Le versioni video usano versioni/video.html#vN."""
+per il selettore (versioni.html). Funziona solo nel repository personale in cui il progetto è nato
+(i commit qui sotto sono di quel repository); le pagine sono già salvate in versioni/."""
 import pathlib, subprocess, json
 root = pathlib.Path(__file__).resolve().parent.parent
 out = root/'versioni'; out.mkdir(exist_ok=True)

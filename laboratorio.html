@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23000%22/%3E%3Cpath d=%22M7 25 14 7h4l7 18h-4.5L16 13l-4.5 12z%22 fill=%22%23ece8e1%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/sito.css">
 <style>
   /* laboratorio dell'intro: un solo mondo visivo scuro, colori sempre espliciti */
   :root {
@@ -21,9 +23,20 @@
   body { padding-inline: 16px; padding-block: 16px 40px; }
   .wrap { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
   @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
-  header.top { max-width: 1100px; margin: 0 auto 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header.top { max-width: 1100px; margin: 0 auto 18px; display: grid; gap: 10px; }
   h1 { margin: 0; font: 400 32px/1 "Italiana", "Didot", "Times New Roman", serif; letter-spacing: .08em; }
   .sub { color: var(--dim); font-size: 13px; margin: 0; }
+  .files { display: grid; gap: 6px; }
+  .files a {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; text-decoration: none; color: var(--paper);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+  }
+  .files a:hover { border-color: #4a463f; }
+  .files a:focus-visible { outline: 1px solid var(--paper); outline-offset: 1px; }
+  .files b { font: 500 12.5px/1.3 var(--sans); }
+  .files .mb { font: 400 11.5px/1.3 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+  .files .use { grid-column: 1 / -1; font-size: 12px; color: var(--dim); line-height: 1.35; }
+  .note { margin: 0; color: var(--dim); font-size: 12.5px; line-height: 1.45; }
 
   /* anteprima */
   .stagebox { display: grid; gap: 10px; position: sticky; top: 12px; }
@@ -76,8 +89,13 @@
 </head>
 <body>
 <header class="top">
-  <h1>Aporia · Laboratorio</h1>
-  <p class="sub">Versione 10 · prova colore, fondo e formato, poi esporta con le impostazioni qui sotto.</p>
+  <nav class="sitenav" aria-label="Pagine">
+    <a class="brand" href="./#home">Aporia</a>
+    <a href="versioni.html">Versioni</a>
+    <a href="laboratorio.html" aria-current="page">Laboratorio</a>
+    <a href="download.html">Download</a>
+  </nav>
+  <p class="sub">Laboratorio · versione 10 · prova colore, fondo e formato; se il file è già pronto lo scarichi qui accanto.</p>
 </header>
 
 <div class="wrap">
@@ -129,6 +147,11 @@
       </div>
     </fieldset>
     <fieldset>
+      <legend>Scarica</legend>
+      <div class="files" id="files" aria-live="polite"></div>
+      <p class="note" id="nofiles" hidden>Questo colore non è ancora pronto da scaricare. Copia le impostazioni e mandamele: lo esporto io (oppure lancia il comando nella cartella del progetto).</p>
+    </fieldset>
+    <fieldset>
       <legend>Impostazioni per l'export</legend>
       <div class="code" id="cmd"></div>
       <div class="row"><button type="button" id="copy">Copia</button><span class="small" id="copied" aria-live="polite"></span></div>
@@ -141,15 +164,15 @@
   <section><h3>Social, CapCut, InShot (telefono)</h3>
     <p>Metti la clip <code>su-nero.mp4</code> come sovrapposizione sopra le tue clip e scegli la fusione <b>Scherma / Schiarisci</b> (Screen): il nero sparisce e resta solo la polvere. Per polvere scura su clip chiare usa <code>su-f2efe9.mp4</code> con fusione <b>Moltiplica</b>.</p></section>
   <section><h3>Come transizione</h3>
-    <p>Metti l'animazione a cavallo del taglio tra due clip: a circa <b>1,4 s</b> il logo è formato e copre il centro, lì fai il taglio; quando il vento lo porta via si scopre la clip successiva (prova "Transizione tra due clip" qui sopra).</p></section>
+    <p>Metti l'animazione a cavallo del taglio tra due clip e passa dalla clip A alla B intorno a <b>1,4 s</b>, quando la raffica ha portato la polvere al centro; poi il vento porta via il logo sopra la clip nuova (prova "Transizione tra due clip" qui sopra).</p></section>
   <section><h3>Premiere, Final Cut, DaVinci, After Effects, Keynote</h3>
-    <p>Usa <code>trasparente.mov</code> (ProRes 4444 con canale alpha): trascinalo sopra le clip o sulla slide, è già trasparente. È pesante (≈95 MB), quindi è a 30 fps.</p></section>
+    <p>Usa <code>trasparente.mov</code> (ProRes 4444 con canale alpha): trascinalo sopra le clip o sulla slide, è già trasparente. È pesante (35–45 MB), quindi è a 30 fps.</p></section>
   <section><h3>Canva, siti web, OBS</h3>
     <p>Usa <code>trasparente.webm</code> (VP9 con trasparenza, ≈2,4 MB). Su un sito: <code>&lt;video autoplay muted playsinline src="…webm"&gt;</code> sopra qualsiasi sfondo.</p></section>
   <section><h3>PowerPoint, Google Slide</h3>
     <p>Non gestiscono video trasparenti: usa <code>su-nero.mp4</code> su una slide nera (o la versione chiara su una slide chiara), a tutto schermo.</p></section>
   <section><h3>Altri colori o formati</h3>
-    <p>Scegli qui sopra, premi <b>Copia</b> e mandami le impostazioni: esporto i file in quel colore (<code>src/export.py</code>).</p></section>
+    <p>Scegli qui sopra, premi <b>Copia</b> e mandami le impostazioni: esporto i file in quel colore (<code>src/export.py</code>). Tutti i file pronti sono nella pagina <a href="download.html" style="color:var(--paper)">Download</a>.</p></section>
 </div>
 
 <script>
@@ -283,6 +306,29 @@
     const col = S.mode === 'grad' ? `--gradient "${S.g.join(',')}" --angle ${S.ang}` : `--color "${S.c}"`;
     const bg = S.bg === 'white' ? ' --bg "#f2efe9"' : '';
     $('cmd').textContent = `python src/export.py ${col} --format ${S.f}${bg}`;
+    listFiles();
+  }
+
+  // ---- file già pronti (export/pacchetto.json, generato da src/pack.py) ------------------
+  const USE = { webm: 'Trasparente · Canva, siti web, OBS', mov: 'Trasparente · Premiere, Final Cut, DaVinci, After Effects, Keynote',
+    'mp4-nero': 'Su nero · CapCut/InShot con fusione Scherma, PowerPoint su slide nera', 'mp4-f2efe9': 'Su chiaro · CapCut/InShot con fusione Moltiplica' };
+  let PACK = null;
+  fetch('export/pacchetto.json').then(r => r.ok ? r.json() : null).then(j => { PACK = j; listFiles(); }).catch(() => {});
+  function listFiles() {
+    const box = $('files'); box.textContent = '';
+    if (!PACK) { $('nofiles').hidden = true; return; }
+    const same = (a, b) => a.length === b.length && a.every((x, i) => x.toLowerCase() === b[i].toLowerCase());
+    const col = S.mode === 'grad' ? (same(S.g, PACK.gradient) && S.ang === 45 ? 'gradiente' : null) : S.c.slice(1).toLowerCase();
+    const order = f => ({ webm: 0, mov: 1, mp4: 2 })[f.type] + (S.bg === 'white' && f.background === 'f2efe9' ? -3 : 0);
+    const list = PACK.files.filter(f => f.format === S.f && f.color === col).sort((a, b) => order(a) - order(b));
+    for (const f of list) {
+      const a = document.createElement('a'); a.href = 'export/' + f.file; a.download = f.file;
+      const b = document.createElement('b'); b.textContent = f.transparent ? `${f.type.toUpperCase()} trasparente` : `MP4 su ${f.background === 'nero' ? 'nero' : '#' + f.background}`;
+      const mb = document.createElement('span'); mb.className = 'mb'; mb.textContent = `${String(f.mb).replace('.', ',')} MB · ${f.fps} fps`;
+      const u = document.createElement('span'); u.className = 'use'; u.textContent = USE[f.type === 'mp4' ? 'mp4-' + f.background : f.type] || '';
+      a.append(b, mb, u); box.appendChild(a);
+    }
+    $('nofiles').hidden = list.length > 0;
   }
   $('copy').addEventListener('click', () => {
     const t = $('cmd').textContent;

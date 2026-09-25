@@ -4,15 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aporia</title>
+<meta name="description" content="Aporia: animazione d'apertura, tutte le versioni, laboratorio dei colori e file da scaricare.">
+<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" as="video" href="assets/intro-portrait.mp4" media="(orientation: portrait)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23000%22/%3E%3Cpath d=%22M7 25 14 7h4l7 18h-4.5L16 13l-4.5 12z%22 fill=%22%23ece8e1%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/sito.css">
 <style>
   /* un solo mondo visivo, scuro per scelta: fondo e colori sempre espliciti */
-  :root {
-    color-scheme: dark; --night: #000; --paper: #ece8e1; --dim: #8e8a84; --line: #2a2823; --chip: rgba(18,17,15,.72);
-    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  }
+  :root { color-scheme: dark; --night: #000; --paper: #ece8e1; --dim: #8e8a84; }
   html, body { height: 100%; }
   body { margin: 0; background: var(--night); color: var(--paper); overflow: hidden; }
 
@@ -27,95 +29,55 @@
   body.home #home h1 { opacity: 1; }
   body:not(.home) #home h1 { letter-spacing: 0.42em; margin-right: -0.42em; }
 
-  #intro { position: fixed; inset: 0; background: var(--night); transition: opacity .6s ease; }
+  /* le altre pagine: in basso, discrete, compaiono con la home */
+  #links {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; justify-content: center;
+    padding: 0 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    opacity: 0; transform: translateY(6px); transition: opacity .8s ease .5s, transform .8s ease .5s; pointer-events: none;
+  }
+  body.home #links { opacity: 1; transform: none; pointer-events: auto; }
+  #links a { padding: 10px 2px; }
+
+  #intro { position: fixed; inset: 0; z-index: 2; background: var(--night); transition: opacity .6s ease; }
   /* il video riempie sempre tutto lo schermo (niente bande nere) */
   #intro video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--night); }
-  #intro video.contain { object-fit: contain; }
   body.home #intro { opacity: 0; pointer-events: none; }
-
-  /* selettore: in alto, tutte le versioni visibili insieme, niente da scorrere */
-  #picker {
-    position: fixed; z-index: 5; left: 0; right: 0; top: 0;
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 8px;
-    background: linear-gradient(#000c 0%, #0008 70%, #0000 100%);
-  }
-  #chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; max-width: 980px; margin: 0 auto; padding: 0; list-style: none; }
-  #chips button {
-    width: 100%; display: grid; gap: 3px; justify-items: start; text-align: left;
-    background: var(--chip); color: var(--dim); border: 1px solid var(--line); border-radius: 8px;
-    padding: 7px 8px 6px; cursor: pointer; -webkit-tap-highlight-color: transparent;
-    transition: color .15s, border-color .15s, background .15s;
-  }
-  #chips .n { font: 500 12px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
-  #chips .t { font: 400 10.5px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  #chips button:hover { color: var(--paper); border-color: #4a463f; }
-  #chips button:focus-visible { outline: 1px solid var(--paper); outline-offset: 1px; }
-  #chips button[aria-pressed="true"] { color: #0b0a09; background: var(--paper); border-color: var(--paper); }
-  #caption {
-    max-width: 980px; margin: 8px auto 0; font: 400 12.5px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--dim);
-    min-height: 1.4em; text-wrap: balance;
-  }
-  #caption b { color: var(--paper); font-weight: 500; }
-  @media (max-width: 420px) { #caption { font-size: 12px; } }
 </style>
 </head>
 <body>
-
 <main id="home" aria-live="polite"><h1 id="homeTitle">Aporia</h1></main>
+
+<nav class="sitenav" id="links" aria-label="Pagine">
+  <a href="versioni.html">Versioni</a>
+  <a href="laboratorio.html">Laboratorio</a>
+  <a href="download.html">Download</a>
+</nav>
 
 <div id="intro" role="img" aria-label="Aporia">
   <video id="film" muted playsinline preload="auto" disablepictureinpicture aria-hidden="true"></video>
 </div>
 
-<nav id="picker" aria-label="Animazioni di apertura">
-  <ul id="chips"></ul>
-  <p id="caption" aria-live="polite"></p>
-</nav>
-
 <script>
 (() => {
   'use strict';
-  // tutte le animazioni di apertura fatte finora; ognuna è un video (le v1–v7 erano animate dal
-  // vivo nel browser e sono state registrate fotogramma per fotogramma: src/record_versions.py)
-  const V = [
-    { k: 'v1', t: 'Prima', d: 'Prima versione: dal nero la polvere, folate di vento, il logo compare e si sgretola.' },
-    { k: 'v2', t: 'Foto', d: 'Logo pre-renderizzato: niente blocchi sui telefoni né tremolio su iPad.' },
-    { k: 'v3', t: 'Scia', d: 'Il logo arriva col vento trascinando una scia e si ferma nitido.' },
-    { k: 'v4', t: 'Polvere', d: 'Il logo è invisibile e si accende solo dove un granello si posa.' },
-    { k: 'v5', t: 'Fiume', d: 'Una A pulita, poi una folata scava il fiume e lo trascina nella bandiera (11 s).' },
-    { k: 'v6', t: 'Corta', d: 'La stessa storia in circa 5 secondi.' },
-    { k: 'v7', t: 'Raffica', d: 'Vento di fondo continuo, fasi accavallate, granelli spinti dal vento.' },
-    { k: 'v8', t: 'Video 1', d: 'Prima simulazione fisica (450.000 granelli): il logo si divide in polvere che resta e che vola.', contain: true },
-    { k: 'v9', t: 'Video 2', d: 'Un solo vento continuo porta tutto al logo, passando dalla A. Schermo sempre pieno.' },
-    { k: 'v10', t: 'Attuale', d: 'Come la 9, ma la polvere arriva con una raffica rapida e si posa di colpo.', cur: true },
-  ];
   const film = document.getElementById('film'), body = document.body;
-  const chips = document.getElementById('chips'), caption = document.getElementById('caption');
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const ext = film.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';   // H.264 o WebM VP9
-  let done = false, watchdog = 0, sel = V.length - 1;
+  let done = false, watchdog = 0;
 
-  function src(v) {
-    const o = window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
-    // le versioni vecchie sono pubblicate solo in MP4 (H.264: iPhone, iPad, Android, Chrome, Safari)
-    return v.cur ? `assets/intro-${o}.${ext}` : `versioni/media/${v.k}-${o}.mp4`;
-  }
   function toHome() {
     if (done) return; done = true;
     clearTimeout(watchdog);
     body.classList.add('home');
     setTimeout(() => { try { film.pause(); } catch (e) {} }, 700);
   }
-  function play(i) {
-    sel = i; const v = V[i];
-    [...chips.querySelectorAll('button')].forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
-    caption.innerHTML = `<b>${String(i + 1).padStart(2, '0')}</b> · `; caption.append(v.d);
+  function play() {
     done = false; body.classList.remove('home');
-    film.classList.toggle('contain', !!v.contain);
-    film.src = src(v); film.currentTime = 0;
+    const o = window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
+    film.src = `assets/intro-${o}.${ext}`; film.currentTime = 0;
     clearTimeout(watchdog);
     watchdog = setTimeout(toHome, 4000);            // se il video non parte si va comunque alla home
-    film.addEventListener('playing', () => { clearTimeout(watchdog); watchdog = setTimeout(toHome, 14000); }, { once: true });
+    film.addEventListener('playing', () => { clearTimeout(watchdog); watchdog = setTimeout(toHome, 8000); }, { once: true });
     const p = film.play(); if (p && p.catch) p.catch(toHome);
   }
   // la home compare mentre l'ultima polvere si sta ancora disperdendo
@@ -123,20 +85,14 @@
   film.addEventListener('ended', toHome);
   film.addEventListener('error', toHome);
 
-  V.forEach((v, i) => {
-    const li = document.createElement('li'), b = document.createElement('button');
-    b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.title = v.d;
-    b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}${v.cur ? ' ●' : ''}</span><span class="t"></span>`;
-    b.querySelector('.t').textContent = v.t;
-    b.addEventListener('click', () => play(i));
-    li.appendChild(b); chips.appendChild(li);
-  });
-
-  // tocco sul video: salta alla home; doppio click su "Aporia": rivedi la versione scelta
+  // tocco o tasto durante il video: si salta alla home; doppio click su "Aporia": si rivede
   document.getElementById('intro').addEventListener('pointerdown', toHome);
-  document.getElementById('homeTitle').addEventListener('dblclick', () => play(sel));
+  addEventListener('keydown', e => { if (!done && !e.metaKey && !e.ctrlKey) toHome(); });
+  document.getElementById('homeTitle').addEventListener('dblclick', play);
 
-  if (reduce) { play(sel); toHome(); } else play(sel);
+  // tornando dalle altre pagine (link "Aporia" in alto) si va direttamente alla home
+  if (reduce || location.hash === '#home') { body.classList.add('home'); done = true; }
+  else play();
 })();
 </script>
 </body>

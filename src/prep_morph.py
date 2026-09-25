@@ -11,7 +11,6 @@ from PIL import Image, ImageDraw
 from scipy.ndimage import gaussian_filter, binary_dilation
 from scipy.optimize import linear_sum_assignment
 root = pathlib.Path(__file__).resolve().parent.parent
-LOGOS = root.parent/'agora_loghi_svg'
 J = json.loads((root/'src'/'logo_frames.json').read_text())
 M = J['meta']; U0, V0, U1, V1 = M['u0'], M['v0'], M['u1'], M['v1']
 
@@ -77,7 +76,7 @@ def enc(a):
 out = {'meta': M, 'movers': None}
 for name, a in [('S', S), ('Bstay', Bstay), ('Bmove', Bmove)]:
     out[name], img = enc(a)
-    if len(sys.argv) > 2: img.save(f'/tmp/claude-0/sp/prep_{name}.png')
+    if len(sys.argv) > 2: (root/'.tmp').mkdir(exist_ok=True); img.save(root/'.tmp'/f'prep_{name}.png')
 mv = np.round(np.nan_to_num(np.concatenate([src, T], 1), nan=-1)*2).astype('<i2')
 out['movers'] = base64.b64encode(mv.tobytes()).decode()
 (root/'src'/'morph.json').write_text(json.dumps(out))
