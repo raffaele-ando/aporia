@@ -25,7 +25,7 @@ PREVIEW = '--preview' in sys.argv
 W, H = (1080, 1920) if LAYOUT == 'portrait' else (1920, 1080)
 if PREVIEW: W, H = W//2, H//2
 FPS = 60
-DUR = float(os.environ.get('DUR', 5.0))
+DUR = float(os.environ.get('DUR', 4.7))
 rng = np.random.default_rng(1)
 
 # ---- riquadro del logo: piccolo abbastanza da restare intero anche quando il video viene
@@ -71,16 +71,20 @@ print(f'granelli {N}; spostamento medio A→logo {np.hypot(ub-ua, vb-va).mean():
 # ---- tempi di ogni granello (secondi) -----------------------------------------------------
 fx = ((ub - U0)/(U1 - U0)).astype(np.float32)
 r = rng.random((6, N)).astype(np.float32)
-tcap = 0.55 + 0.75*fx + 0.55*r[0]**1.4          # il vento lo "deposita": inizia a rallentare
-dcap = 0.55 + 0.45*r[1]                          # quanto ci mette a posarsi
-tmor = tcap + 0.15 + 0.35*r[2]                   # la sua destinazione scivola dalla A al logo
-dmor = 0.55 + 0.35*r[3]
-trel = 3.4 + 0.85*fx + 0.14*r[4]                 # il vento se lo riprende: un fronte da sinistra a destra
+tcap = 0.3 + 0.6*fx + 0.45*r[0]**1.4            # la raffica lo sbatte sul logo (sinistra -> destra)
+dcap = 0.18 + 0.22*r[1]                          # si ferma quasi di colpo, come polvere che urta
+tmor = tcap + 0.05 + 0.25*r[2]                   # la sua destinazione scivola dalla A al logo
+dmor = 0.35 + 0.3*r[3]
+trel = 3.05 + 0.8*fx + 0.14*r[4]                 # il vento se lo riprende: un fronte da sinistra a destra
 tau = np.clip(np.exp(rng.normal(np.log(0.11), 0.45, N)), 0.035, 0.4).astype(np.float32)
+
+def smooth(a, b, t):
+    q = np.clip((t - a)/(b - a), 0, 1); return q*q*(3 - 2*q)
 
 # ---- vento: un solo flusso continuo; rinforza verso la fine --------------------------------
 def wind_speed(t):
-    return 360 + 80*np.sin(t*0.9) + 700*np.clip((t - 3.3)/0.9, 0, 1)**1.5
+    # raffica forte all'inizio (porta la polvere), poi brezza, poi rinforza per l'uscita
+    return 330 + 650*(1 - smooth(0.9, 2.1, t)) + 60*np.sin(t*0.9) + 750*np.clip((t - 2.95)/0.9, 0, 1)**1.5
 def curl_grid(n, cells, seed):
     rr = np.random.default_rng(seed)
     psi = gaussian_filter(rr.standard_normal((n, cells, cells)).astype(np.float32), (1.2, 1.6, 1.6), mode='wrap')
@@ -103,16 +107,13 @@ def wind(xx, yy, t, adv):
     a = 170 + 0.28*U
     return U + tx*a, -0.06*U + ty*a
 
-def smooth(a, b, t):
-    q = np.clip((t - a)/(b - a), 0, 1); return q*q*(3 - 2*q)
-
 # ---- stato iniziale: i granelli sono già nel vento, sopravento rispetto a dove si poseranno ----
-x = (ua - 380*tcap - 750*rng.random(N)**0.8).astype(np.float32)   # molti arrivano da fuori schermo, a sinistra
-y = (va + rng.normal(0, 210, N)).astype(np.float32)
-vx = np.full(N, 360, np.float32); vy = np.zeros(N, np.float32)
+x = (ua - 950*tcap - 700*rng.random(N)**0.8).astype(np.float32)   # arrivano da fuori schermo, a sinistra
+y = (va + rng.normal(0, 150, N)).astype(np.float32)
+vx = np.full(N, 950, np.float32); vy = np.zeros(N, np.float32)
 NA = N//10                                          # polvere nell'aria: attraversa tutto lo schermo
 ax_ = rng.uniform(UMIN - 400, UMAX, NA).astype(np.float32); ay_ = rng.uniform(VMIN - 60, VMAX + 60, NA).astype(np.float32)
-avx = np.full(NA, 360, np.float32); avy = np.zeros(NA, np.float32)
+avx = np.full(NA, 950, np.float32); avy = np.zeros(NA, np.float32)
 atau = np.clip(np.exp(rng.normal(np.log(0.09), 0.5, NA)), 0.03, 0.35).astype(np.float32)
 aw = (0.3 + 0.7*rng.random(NA)).astype(np.float32)
 
@@ -155,8 +156,8 @@ for fi in range(nframes):
         rel = t > trel
         tt = np.where(rel, tau*(0.6 + 1.6*r[1]), tau)
         lift = np.where(rel, -(40 + 120*r[2]), 0)
-        axc = (wx - vx)/tt*free + (tx - x)*110*c2 - vx*19*c2
-        ayc = (wy + lift - vy)/tt*free + (ty - y)*110*c2 - vy*19*c2
+        axc = (wx - vx)/tt*free + (tx - x)*420*c2 - vx*40*c2
+        ayc = (wy + lift - vy)/tt*free + (ty - y)*420*c2 - vy*40*c2
         kick = rel & (t - trel < dt)                                   # strappo: ognuno parte a modo suo
         vx[kick] += 250 + 500*r[3][kick]; vy[kick] += (r[2][kick] - 0.6)*380
         vx += axc*dt; vy += ayc*dt
@@ -168,7 +169,7 @@ for fi in range(nframes):
         ax_[wrap] = UMIN - 60 - 250*rng.random(wrap.sum()); ay_[wrap] = rng.uniform(VMIN - 60, VMAX + 60, wrap.sum())
         wrap = (ay_ < VMIN - 120) | (ay_ > VMAX + 120); ay_[wrap] = rng.uniform(VMIN, VMAX, wrap.sum())
         adv += wind_speed(t)*dt
-    vis = smooth(0.0, 0.45, t)*(1 - smooth(4.5, 5.0, t))
+    vis = smooth(0.0, 0.25, t)*(1 - smooth(4.2, 4.7, t))
     # portata via: la polvere del logo resta visibile mentre si apre nel vento, poi si disperde
     wl = wN*vis*(c + (1 - c)*np.where(rel, np.maximum(vis_flight, 0.6), vis_flight))
     wl = wl*np.where(rel, 1 - smooth(trel + 0.35, trel + 1.25, t), 1)

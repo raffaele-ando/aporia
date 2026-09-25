@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aporia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&display=swap">
+<style>
+  /* riproduce una delle versioni video dell'intro: video.html#v8, #v9 */
+  :root { color-scheme: dark; }
+  html, body { height: 100%; margin: 0; background: #000; color: #ece8e1; overflow: hidden; }
+  #home { position: fixed; inset: 0; display: grid; place-items: center; }
+  #home h1 { margin: 0 -0.16em 0 0; font: 400 clamp(56px, 13vw, 200px)/1 "Italiana", "Didot", "Bodoni 72", "Times New Roman", serif;
+    letter-spacing: 0.16em; opacity: 0; transition: opacity .9s ease; }
+  body.home #home h1 { opacity: 1; }
+  #intro { position: fixed; inset: 0; background: #000; transition: opacity .6s ease; }
+  #intro video { width: 100%; height: 100%; display: block; background: #000; }
+  body.home #intro { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<main id="home"><h1>Aporia</h1></main>
+<div id="intro"><video id="film" muted playsinline preload="auto" disablepictureinpicture></video></div>
+<script>
+(() => {
+  const film = document.getElementById('film'), body = document.body;
+  const v = (location.hash || '#v9').slice(1);
+  // la v8 era pensata "contenuta" (con bande nere), dalla v9 il video riempie lo schermo
+  film.style.objectFit = v === 'v8' ? 'contain' : 'cover';
+  const ext = film.canPlayType('video/mp4; codecs="avc1.640028"') ? 'mp4' : 'webm';
+  film.src = `media/${v}-${innerHeight >= innerWidth ? 'portrait' : 'landscape'}.${ext}`;
+  let done = false;
+  const toHome = () => { if (!done) { done = true; body.classList.add('home'); } };
+  film.addEventListener('timeupdate', () => { if (film.duration && film.currentTime > film.duration - 0.55) toHome(); });
+  film.addEventListener('ended', toHome); film.addEventListener('error', toHome);
+  const p = film.play(); if (p && p.catch) p.catch(toHome);
+})();
+</script>
+</body>
+</html>

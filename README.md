@@ -1,7 +1,7 @@
 # Aporia — apertura del sito
 
-Animazione d'ingresso del sito, circa 5 secondi. Un solo vento, continuo, da sinistra verso
-destra: porta la polvere dal nero e la deposita granello per granello; mentre arriva la polvere
+Animazione d'ingresso del sito, circa 4,7 secondi. Un solo vento da sinistra verso destra: una
+raffica rapida porta la polvere dal nero e la sbatte sul logo granello per granello; mentre arriva la polvere
 passa dalla forma della A e scivola, sempre nel verso del vento, fino al logo dust definitivo,
 che è il momento più pieno. Poi il vento rinforza e lo porta via, da sinistra a destra, e resta
 la home, che per ora mostra solo la scritta **Aporia**.
@@ -13,9 +13,18 @@ la home, che per ora mostra solo la scritta **Aporia**.
 | `index.html` | la pagina: video d'apertura, poi la home "Aporia" |
 | `assets/intro-portrait.mp4` / `.webm` | video verticale 1080×1920 (telefoni, tablet in verticale) |
 | `assets/intro-landscape.mp4` / `.webm` | video orizzontale 1920×1080 (computer, tablet in orizzontale) |
+| `versioni/` | tutte le animazioni di apertura fatte finora (v1–v7 pagine, v8–v9 video), per il selettore |
 | `intro-canvas.html` | versione precedente, calcolata dal vivo nel browser (tenuta come riferimento) |
 | `preview/` | fotogrammi di controllo (telefono e desktop) |
 | `src/` | script che generano tutto |
+
+## Selettore delle animazioni
+
+Nella home, sotto "Aporia", il pulsante **Animazioni di apertura** apre l'elenco di tutte le
+versioni fatte finora, dalla prima (v1) all'attuale (v10). Ognuna si riproduce a tutto schermo
+con **Rivedi** e **Chiudi** (anche Esc). Le versioni v1–v7 sono recuperate dallo storico git
+(`python src/build_versions.py`); le v8 e v9 sono i video precedenti in `versioni/media/`,
+riprodotti da `versioni/video.html#v8` e `#v9`.
 
 ## Perché un video
 
@@ -30,7 +39,7 @@ La polvere è una simulazione fatta in anticipo (`src/sim_video.py`), con circa 
 - **All'uscita** ogni granello parte quando il fronte del vento lo raggiunge, con il suo peso.
 
 Riprodurre un video lo sa fare qualsiasi dispositivo: fluido ovunque, identico su Android, iPhone,
-iPad e computer. Pesi: verticale 1 MB (MP4) / 0,4 MB (WebM), orizzontale 0,6 / 0,25 MB.
+iPad e computer. Pesi: verticale 0,6 MB (MP4) / 0,25 MB (WebM), orizzontale 0,4 / 0,16 MB.
 
 - **Schermo sempre pieno, niente bande nere**: il video riempie lo schermo (si ritaglia ai lati o
   sopra/sotto) e il logo sta nella zona centrale, che resta intera su qualsiasi proporzione,
