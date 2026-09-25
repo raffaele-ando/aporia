@@ -34,7 +34,8 @@
     <filter id="agoraPlain" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 1 0"/>
     </filter>
-    <filter id="agoraPlainInv" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <!-- inversione per la polarità scuro-su-chiaro (stessa polvere, stesse animazioni) -->
+    <filter id="agoraInvert" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feFlood flood-color="#000" result="black"/>
       <feComposite in="SourceGraphic" in2="black" operator="over" result="o"/>
       <feColorMatrix in="o" type="matrix" values="-1 0 0 0 1  -1 0 0 0 1  -1 0 0 0 1  0 0 0 0 1"/>
@@ -148,8 +149,9 @@
       <feComposite in="streak" in2="sw" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="sK"/>
       <feComposite in="gK" in2="sK" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="texture"/>
       <feBlend in="texture" in2="surface" mode="overlay" result="dusted"/>
+      <!-- tono: curva che lascia fermi nero e bianco (esposizione e contrasto senza tagli netti) -->
       <feComponentTransfer id="agoraTone" in="dusted" result="base">
-        <feFuncR type="linear" slope="1" intercept="0"/><feFuncG type="linear" slope="1" intercept="0"/><feFuncB type="linear" slope="1" intercept="0"/>
+        <feFuncR type="table" tableValues="0 1"/><feFuncG type="table" tableValues="0 1"/><feFuncB type="table" tableValues="0 1"/>
       </feComponentTransfer>
       <!-- granelli: grumi irregolari, trascinati dal flusso -->
       <feTurbulence id="agoraSpeckNoise" type="fractalNoise" baseFrequency="0.34 0.21" numOctaves="3" seed="23" result="s0"/>
@@ -169,68 +171,6 @@
       <feComposite in="white" in2="speckLit" operator="in" result="speckW0"/>
       <feComponentTransfer in="speckW0" result="speckW"><feFuncA id="agoraSpeckGain" type="linear" slope="1.0" intercept="0"/></feComponentTransfer>
       <feComposite in="speckW" in2="base" operator="over"/>
-    </filter>
-    <filter id="agoraDustFxInv" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-      <!-- campo di flusso: guida il movimento della polvere -->
-      <feTurbulence id="agoraFlowNoiseInv" type="fractalNoise" baseFrequency="0.011" numOctaves="2" seed="5" result="flow"/>
-      <!-- sorgente resa opaca (su nero; su bianco nella versione inversa): niente aloni grigi ai bordi -->
-      <feFlood flood-color="#000" result="black"/>
-      <feComposite in="SourceGraphic" in2="black" operator="over" result="opaque"/>
-      <feDisplacementMap id="agoraDisplaceInv" in="opaque" in2="flow" scale="0" xChannelSelector="R" yChannelSelector="G" result="src"/>
-      <!-- canale rosso = luce, blu = intensità della grana, verde = dove la polvere è trascinata -->
-      <feColorMatrix in="src" type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 1 0" result="surface"/>
-      <feColorMatrix in="src" type="matrix" values="0 1 0 0 0  0 1 0 0 0  0 1 0 0 0  0 0 0 0 1" result="drag"/>
-      <feColorMatrix in="src" type="matrix" values="0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 0 0 1" result="k0"/>
-      <feGaussianBlur id="agoraGrainMapBlurInv" in="k0" stdDeviation="10.0" result="k"/>
-      <feComponentTransfer in="k" result="ik"><feFuncR type="table" tableValues="1 0"/><feFuncG type="table" tableValues="1 0"/><feFuncB type="table" tableValues="1 0"/></feComponentTransfer>
-      <!-- grana: rumore spazzato dal flusso -->
-      <feTurbulence id="agoraGrainNoiseInv" type="fractalNoise" baseFrequency="0.5 0.34" numOctaves="3" seed="7" result="g0"/>
-      <feOffset id="agoraGrainShiftInv" in="g0" dx="0" dy="0" result="g1"/>
-      <feDisplacementMap id="agoraSweepInv" in="g1" in2="flow" scale="14" xChannelSelector="R" yChannelSelector="G" result="g2"/>
-      <feColorMatrix in="g2" type="matrix" result="grain"
-        values="1.8 0 0 0 -0.4 1.8 0 0 0 -0.4 1.8 0 0 0 -0.4 0 0 0 0 1"/>
-      <!-- scie: polvere trascinata lungo il fiume -->
-      <feTurbulence id="agoraStreakNoiseInv" type="fractalNoise" baseFrequency="0.01 0.16" numOctaves="3" seed="11" result="t0"/>
-      <feOffset id="agoraStreakShiftInv" in="t0" dx="0" dy="0" result="t1"/>
-      <feDisplacementMap in="t1" in2="flow" scale="40" xChannelSelector="G" yChannelSelector="R" result="t2"/>
-      <feColorMatrix in="t2" type="matrix" result="streak"
-        values="1.2 0 0 0 -0.1 1.2 0 0 0 -0.1 1.2 0 0 0 -0.1 0 0 0 0 1"/>
-      <!-- sui bianchi la polvere si dirada piano piano (come nell'originale), niente confine netto -->
-      <feComponentTransfer id="agoraHighlightInv" in="surface" result="hl">
-        <feFuncR type="table" tableValues="1 1 1 1 1 0.95 0.82 0.6 0.3"/><feFuncG type="table" tableValues="1 1 1 1 1 0.95 0.82 0.6 0.3"/><feFuncB type="table" tableValues="1 1 1 1 1 0.95 0.82 0.6 0.3"/>
-      </feComponentTransfer>
-      <feComposite in="k" in2="hl" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="kh"/>
-      <!-- miscela: grana dove k è alto, scie dove k è basso -->
-      <feComposite in="grain" in2="kh" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="gK"/>
-      <feComposite in="ik" in2="drag" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="sw0"/>
-      <feComposite in="sw0" in2="hl" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="sw"/>
-      <feComposite in="streak" in2="sw" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="sK"/>
-      <feComposite in="gK" in2="sK" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="texture"/>
-      <feBlend in="texture" in2="surface" mode="overlay" result="dusted"/>
-      <feComponentTransfer id="agoraToneInv" in="dusted" result="base">
-        <feFuncR type="linear" slope="1" intercept="0"/><feFuncG type="linear" slope="1" intercept="0"/><feFuncB type="linear" slope="1" intercept="0"/>
-      </feComponentTransfer>
-      <!-- granelli: grumi irregolari, trascinati dal flusso -->
-      <feTurbulence id="agoraSpeckNoiseInv" type="fractalNoise" baseFrequency="0.34 0.21" numOctaves="3" seed="23" result="s0"/>
-      <feDisplacementMap in="s0" in2="flow" scale="22" xChannelSelector="G" yChannelSelector="R" result="s1"/>
-      <feColorMatrix in="s1" type="matrix" result="s2" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
-      <feComponentTransfer in="s2" result="speck">
-        <feFuncR type="linear" slope="5.0" intercept="-3.0"/><feFuncG type="linear" slope="5.0" intercept="-3.0"/><feFuncB type="linear" slope="5.0" intercept="-3.0"/>
-      </feComponentTransfer>
-      <feColorMatrix in="speck" type="luminanceToAlpha" result="speckA"/>
-      <!-- i granelli stanno dove c'è luce e si disperdono poco oltre -->
-      <feColorMatrix in="surface" type="luminanceToAlpha" result="lum"/>
-      <feGaussianBlur id="agoraHaloInv" in="lum" stdDeviation="9.0" result="halo"/>
-      <feComposite in="speckA" in2="halo" operator="in" result="speckLit0"/>
-      <!-- fuori dalla lettera solo nella zona morbida (la sagoma è nel canale alpha) -->
-      <feComposite in="speckLit0" in2="SourceAlpha" operator="in" result="speckLit"/>
-      <feFlood flood-color="#fff" result="white"/>
-      <feComposite in="white" in2="speckLit" operator="in" result="speckW0"/>
-      <feComponentTransfer in="speckW0" result="speckW"><feFuncA id="agoraSpeckGainInv" type="linear" slope="1.0" intercept="0"/></feComponentTransfer>
-      <feComposite in="speckW" in2="base" operator="over" result="final0"/>
-      <feComponentTransfer in="final0">
-        <feFuncR type="table" tableValues="1 0"/><feFuncG type="table" tableValues="1 0"/><feFuncB type="table" tableValues="1 0"/>
-      </feComponentTransfer>
     </filter>
 
     <!-- luce non ritagliata (prolungata oltre i bordi netti) -->
@@ -320,10 +260,10 @@
       <g id="agoraLightDark"><use xlink:href="#agoraFieldRaw"/></g>
     </g>
     <mask id="agoraMaskDark" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g mask="url(#agoraShape)">
-        <g filter="url(#agoraPlainInv)"><use xlink:href="#agoraSourceDark"/></g>
-        <g id="agoraDustyDark" filter="url(#agoraDustFxInv)"><use xlink:href="#agoraSourceDark"/></g>
-      </g>
+      <g mask="url(#agoraShape)"><g filter="url(#agoraInvert)">
+        <g filter="url(#agoraPlain)"><use xlink:href="#agoraSourceDark"/></g>
+        <g id="agoraDustyDark" filter="url(#agoraDustFx)"><use xlink:href="#agoraSourceDark"/></g>
+      </g></g>
     </mask>
   </defs>
   <rect id="agoraBg" width="1254" height="1254"/>

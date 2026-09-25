@@ -179,7 +179,15 @@ function slopeMat(m, v){ const i = 0.5 - v*0.5;
   m.setAttribute('values', `${v} 0 0 0 ${i} ${v} 0 0 0 ${i} ${v} 0 0 0 ${i} 0 0 0 0 1`); }
 function setGrainSlope(v){ slopeMat(grainMat, v); }
 function setSpeck(slope, thr){ speckFns.forEach(f => { f.setAttribute('slope', slope); f.setAttribute('intercept', (-slope*thr).toFixed(4)); }); }
-function setTone(slope, shift){ toneFns.forEach(f => { f.setAttribute('slope', slope); f.setAttribute('intercept', (shift + (1-slope)/2).toFixed(4)); }); }
+// esposizione = curva gamma, contrasto = curva a S: nero e bianco restano fermi,
+// quindi il fondo resta trasparente e i bianchi non si tagliano di netto
+function setTone(c, e){
+  const g = Math.pow(2, -e*2.5), v = [];
+  // "piede": i quasi-neri restano neri, così la luce che sfuma non mostra mai un bordo
+  for (let i = 0; i <= 48; i++) { const x = Math.pow(i/48, g), a = Math.pow(x, c), b = Math.pow(1-x, c);
+    const toe = 1 - Math.pow(1 - Math.min(1, x/0.12), 2);
+    v.push(((a/(a+b || 1)) * (c < 1 ? toe : 1)).toFixed(4)); }
+  toneFns.forEach(f => f.setAttribute('tableValues', v.join(' '))); }
 function gradAngle(deg){
   const r = deg*Math.PI/180, c = Math.cos(r), s = Math.sin(r);
   N.grad.setAttribute('x1', (0.5 - c/2).toFixed(4)); N.grad.setAttribute('y1', (0.5 + s/2).toFixed(4));

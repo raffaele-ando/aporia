@@ -107,14 +107,15 @@ Strati, tutti vettoriali:
 | `#agoraDisplace` `scale` | turbolenza che deforma il logo (0 fermo · 3-6 respiro · 20+ dissolve) |
 | `#agoraFlowNoise` `baseFrequency` | scala del vortice di flusso |
 | `#agoraGrainShift` `dx`/`dy` · `#agoraStreakShift` `dx` | scorrimento di grana e scie |
-| `#agoraTone` | contrasto ed esposizione del chiaroscuro |
+| `#agoraTone` `tableValues` | curva di tono (esposizione/contrasto): nero e bianco restano fermi, il fondo resta trasparente |
 | `#agoraHighlight` `tableValues` | quanta polvere per fascia di luce, dal nero al bianco: sui bianchi si dirada piano |
 | `#agoraEdge` / `#agoraEdgeShape` `stdDeviation` | morbidezza del bordo, dal netto (0.6) al più sfumato |
 | `#agoraSoften` / `#agoraBloom` `stdDeviation` | morbidezza della luce · diffusione dell'alone |
 
 ### Animazioni
 
-Sei `<animate>` SMIL, ognuna con id, dentro `#agoraDustFx`:
+Sei `<animate>` SMIL, ognuna con id, dentro `#agoraDustFx`. Le due polarità (chiaro su scuro,
+scuro su chiaro) usano lo stesso filtro: animazioni e parametri valgono per entrambe.
 
 | id | Cosa fa | Durata |
 |---|---|---|
@@ -176,6 +177,12 @@ pixel per pixel, ma ha grana, intensità per zona e scie dell'originale.
 - **Bordino scuro nella versione su fondo chiaro**: la luce veniva tagliata due volte dallo
   stesso bordo sfumato e al centro della sfumatura restava un filo scuro. Ora il bordo lo
   decide solo la sagoma. I bordi esterni sono netti come nell'originale.
+- **Le correzioni tengono con qualsiasi impostazione.** Verificato nel laboratorio con gradiente,
+  scuro su chiaro, fondo trasparente, grana, scie, morbidezza, alone, dispersione, deformazione,
+  esposizione e contrasto ai valori estremi. Due cose sistemate in questa verifica: in "scuro su
+  chiaro" cursori e animazioni non avevano effetto (ora c'è un solo filtro per le due polarità);
+  esposizione e contrasto spostavano anche il nero (fondo grigio) e tagliavano i bianchi. Ora sono
+  una curva che lascia fermi nero e bianco.
 
 ## Come sono stati ricostruiti
 

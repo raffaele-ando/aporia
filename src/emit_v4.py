@@ -101,8 +101,9 @@ def dust_filter(fid, P, invert=False, animated=True):
       <feComposite in="streak" in2="sw" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="sK"/>
       <feComposite in="gK" in2="sK" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="texture"/>
       <feBlend in="texture" in2="surface" mode="overlay" result="dusted"/>
+      <!-- tono: curva che lascia fermi nero e bianco (esposizione e contrasto senza tagli netti) -->
       <feComponentTransfer id="agoraTone{sfx}" in="dusted" result="base">
-        <feFuncR type="linear" slope="1" intercept="0"/><feFuncG type="linear" slope="1" intercept="0"/><feFuncB type="linear" slope="1" intercept="0"/>
+        <feFuncR type="table" tableValues="0 1"/><feFuncG type="table" tableValues="0 1"/><feFuncB type="table" tableValues="0 1"/>
       </feComponentTransfer>
       <!-- granelli: grumi irregolari, trascinati dal flusso -->
       <feTurbulence id="agoraSpeckNoise{sfx}" type="fractalNoise" baseFrequency="{P['speck_fx']} {P['speck_fy']}" numOctaves="{P['speck_oct']}" seed="{P['speck_seed']}" result="s0"/>
@@ -194,7 +195,8 @@ def emit(hull_d, open_d, zone_d, levels, glows, klevels, k_bg=0.87, P=P4, animat
     <filter id="agoraPlain" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feColorMatrix type="matrix" values="{R2RGB}"/>
     </filter>
-    <filter id="agoraPlainInv" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <!-- inversione per la polarità scuro-su-chiaro (stessa polvere, stesse animazioni) -->
+    <filter id="agoraInvert" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feFlood flood-color="#000" result="black"/>
       <feComposite in="SourceGraphic" in2="black" operator="over" result="o"/>
       <feColorMatrix in="o" type="matrix" values="-1 0 0 0 1  -1 0 0 0 1  -1 0 0 0 1  0 0 0 0 1"/>
@@ -229,7 +231,6 @@ def emit(hull_d, open_d, zone_d, levels, glows, klevels, k_bg=0.87, P=P4, animat
     </mask>
 
     {dust_filter('agoraDustFx', P, invert=False, animated=animated)}
-    {dust_filter('agoraDustFxInv', P, invert=True, animated=False)}
 
     <!-- luce non ritagliata (prolungata oltre i bordi netti) -->
     <g id="agoraFieldRaw" filter="url(#agoraSoften)">
@@ -265,10 +266,10 @@ def emit(hull_d, open_d, zone_d, levels, glows, klevels, k_bg=0.87, P=P4, animat
       <g id="agoraLightDark"><use xlink:href="#agoraFieldRaw"/></g>
     </g>
     <mask id="agoraMaskDark" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g mask="url(#agoraShape)">
-        <g filter="url(#agoraPlainInv)"><use xlink:href="#agoraSourceDark"/></g>
-        <g id="agoraDustyDark" filter="url(#agoraDustFxInv)"><use xlink:href="#agoraSourceDark"/></g>
-      </g>
+      <g mask="url(#agoraShape)"><g filter="url(#agoraInvert)">
+        <g filter="url(#agoraPlain)"><use xlink:href="#agoraSourceDark"/></g>
+        <g id="agoraDustyDark" filter="url(#agoraDustFx)"><use xlink:href="#agoraSourceDark"/></g>
+      </g></g>
     </mask>
   </defs>
   <rect id="agoraBg" width="1254" height="1254"/>
