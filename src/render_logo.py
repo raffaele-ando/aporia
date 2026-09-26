@@ -1,18 +1,18 @@
-"""Fotografa il logo dust (dall'SVG vero, copiato in src/logo/) in due fotogrammi con grana diversa.
+"""Fotografa il logo dust (dall'SVG vero, in loghi/) in due fotogrammi con grana diversa.
 Il logo nell'intro è un'immagine: nessun filtro SVG da calcolare durante l'animazione, quindi niente
 blocchi sui telefoni e nessun tremolio su Safari/iPad."""
 import pathlib, re, io, base64, json
 from PIL import Image
 from playwright.sync_api import sync_playwright
 root = pathlib.Path(__file__).resolve().parent.parent
-svg0 = (root/'src'/'logo'/'agora-logo-dust-static.svg').read_text()
+svg0 = (root/'loghi'/'aporia-logo-dust-static.svg').read_text()
 K = 1.15                                   # pixel per unità del viewBox
 U0, V0, U1, V1 = 196, 196, 1044, 996       # ritaglio attorno alla lettera (con la polvere che esce)
 CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 
 def variant(seed_g, seed_s):
-    s = re.sub(r'(id="agoraGrainNoise"[^>]*seed=")\d+', rf'\g<1>{seed_g}', svg0)
-    s = re.sub(r'(id="agoraSpeckNoise"[^>]*seed=")\d+', rf'\g<1>{seed_s}', s)
+    s = re.sub(r'(id="aporiaGrainNoise"[^>]*seed=")\d+', rf'\g<1>{seed_g}', svg0)
+    s = re.sub(r'(id="aporiaSpeckNoise"[^>]*seed=")\d+', rf'\g<1>{seed_s}', s)
     return s.replace('width="1254" height="1254"', f'width="{1254*K:.0f}" height="{1254*K:.0f}"', 1)
 
 def main():

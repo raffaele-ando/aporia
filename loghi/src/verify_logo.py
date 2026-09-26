@@ -5,7 +5,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 CHROME='/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 S=4
-txt=open('agora-logo.svg').read()
+txt=open('aporia-logo.svg').read()
 import re
 vw,vh = [float(v) for v in re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', txt).groups()]
 W,H=int(vw*S), int(vh*S)

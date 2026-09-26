@@ -34,7 +34,7 @@ riallinea a `main` a ogni push: basta lavorare su `main`.
 | `preview/` | fotogrammi di controllo (telefono e desktop) |
 | `export/` | l'animazione pronta da usare in video, social e presentazioni (vedi sotto) |
 | `src/master/` | la simulazione v10 salvata come "luce" (bianco su nero, 60 fps): la base di ogni export |
-| `src/logo/` | il logo dust in SVG (dal progetto dei loghi Agorà) da cui parte tutto |
+| `loghi/` | i loghi di Aporia in SVG (pulito, polvere, inverso, tracciato fedele), il laboratorio `aporia-dust-lab.html` e gli script che li generano, con tutto il loro storico: vedi `loghi/README.md` |
 | `src/` | script che generano tutto |
 
 ## Usare l'animazione fuori dal sito
@@ -124,7 +124,7 @@ iPad e computer. Pesi: verticale 0,6 MB (MP4) / 0,25 MB (WebM), orizzontale 0,4 
 
 ## Come si rigenera
 
-1. `python src/render_logo.py` — fotografa il logo dust (`src/logo/agora-logo-dust-static.svg`).
+1. `python src/render_logo.py` — fotografa il logo dust (`loghi/aporia-logo-dust-static.svg`).
 2. `python src/prep_morph.py` — prepara la forma della A e il logo come immagini.
 3. `python src/sim_video.py portrait` e `python src/sim_video.py landscape` — simulazione e video
    già compressi per il web (circa 7 minuti ciascuno; `--preview` per una prova veloce).

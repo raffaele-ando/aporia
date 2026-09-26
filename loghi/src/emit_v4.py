@@ -48,13 +48,13 @@ def dust_filter(fid, P, invert=False, animated=True):
     anim = ''
     if animated and not invert:
         anim = '''
-      <animate xlink:href="#agoraGrainNoise" attributeName="seed" values="7;19;31;43;55;67;79;91;7"
-               dur="1.1s" calcMode="discrete" repeatCount="indefinite" id="agoraBoil"/>
-      <animate xlink:href="#agoraGrainShift" attributeName="dx" values="0;46;0" dur="26s" repeatCount="indefinite" id="agoraDriftX"/>
-      <animate xlink:href="#agoraGrainShift" attributeName="dy" values="0;-34;0" dur="37s" repeatCount="indefinite" id="agoraDriftY"/>
-      <animate xlink:href="#agoraStreakShift" attributeName="dx" values="0;-120;0" dur="19s" repeatCount="indefinite" id="agoraStream"/>
-      <animate xlink:href="#agoraSweep" attributeName="scale" values="%(sw)s;%(sw2)s;%(sw)s" dur="17s" repeatCount="indefinite" id="agoraSwirl"/>
-      <animate xlink:href="#agoraFlowNoise" attributeName="baseFrequency" values="%(ff)s;%(ff2)s;%(ff)s" dur="23s" repeatCount="indefinite" id="agoraFlow"/>''' % dict(
+      <animate xlink:href="#aporiaGrainNoise" attributeName="seed" values="7;19;31;43;55;67;79;91;7"
+               dur="1.1s" calcMode="discrete" repeatCount="indefinite" id="aporiaBoil"/>
+      <animate xlink:href="#aporiaGrainShift" attributeName="dx" values="0;46;0" dur="26s" repeatCount="indefinite" id="aporiaDriftX"/>
+      <animate xlink:href="#aporiaGrainShift" attributeName="dy" values="0;-34;0" dur="37s" repeatCount="indefinite" id="aporiaDriftY"/>
+      <animate xlink:href="#aporiaStreakShift" attributeName="dx" values="0;-120;0" dur="19s" repeatCount="indefinite" id="aporiaStream"/>
+      <animate xlink:href="#aporiaSweep" attributeName="scale" values="%(sw)s;%(sw2)s;%(sw)s" dur="17s" repeatCount="indefinite" id="aporiaSwirl"/>
+      <animate xlink:href="#aporiaFlowNoise" attributeName="baseFrequency" values="%(ff)s;%(ff2)s;%(ff)s" dur="23s" repeatCount="indefinite" id="aporiaFlow"/>''' % dict(
             sw=P['sweep'], sw2=round(P['sweep']*1.6, 2), ff=P['flow_freq'], ff2=round(P['flow_freq']*1.35, 5))
     tail = '''
       <feComposite in="speckW" in2="base" operator="over"/>'''
@@ -66,31 +66,31 @@ def dust_filter(fid, P, invert=False, animated=True):
       </feComponentTransfer>'''
     return f'''<filter id="{fid}" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- campo di flusso: guida il movimento della polvere -->
-      <feTurbulence id="agoraFlowNoise{sfx}" type="fractalNoise" baseFrequency="{P['flow_freq']}" numOctaves="{P['flow_oct']}" seed="{P['flow_seed']}" result="flow"/>
+      <feTurbulence id="aporiaFlowNoise{sfx}" type="fractalNoise" baseFrequency="{P['flow_freq']}" numOctaves="{P['flow_oct']}" seed="{P['flow_seed']}" result="flow"/>
       <!-- sorgente resa opaca (su nero; su bianco nella versione inversa): niente aloni grigi ai bordi -->
       <feFlood flood-color="#000" result="black"/>
       <feComposite in="SourceGraphic" in2="black" operator="over" result="opaque"/>
-      <feDisplacementMap id="agoraDisplace{sfx}" in="opaque" in2="flow" scale="0" xChannelSelector="R" yChannelSelector="G" result="src"/>
+      <feDisplacementMap id="aporiaDisplace{sfx}" in="opaque" in2="flow" scale="0" xChannelSelector="R" yChannelSelector="G" result="src"/>
       <!-- canale rosso = luce, blu = intensità della grana, verde = dove la polvere è trascinata -->
       <feColorMatrix in="src" type="matrix" values="{R2RGB}" result="surface"/>
       <feColorMatrix in="src" type="matrix" values="{G2RGB}" result="drag"/>
       <feColorMatrix in="src" type="matrix" values="{B2RGB}" result="k0"/>
-      <feGaussianBlur id="agoraGrainMapBlur{sfx}" in="k0" stdDeviation="{P['kmap_blur']}" result="k"/>
+      <feGaussianBlur id="aporiaGrainMapBlur{sfx}" in="k0" stdDeviation="{P['kmap_blur']}" result="k"/>
       <feComponentTransfer in="k" result="ik"><feFuncR type="table" tableValues="1 0"/><feFuncG type="table" tableValues="1 0"/><feFuncB type="table" tableValues="1 0"/></feComponentTransfer>
       <!-- grana: rumore spazzato dal flusso -->
-      <feTurbulence id="agoraGrainNoise{sfx}" type="fractalNoise" baseFrequency="{P['grain_fx']} {P['grain_fy']}" numOctaves="{P['grain_oct']}" seed="{P['grain_seed']}" result="g0"/>
-      <feOffset id="agoraGrainShift{sfx}" in="g0" dx="0" dy="0" result="g1"/>
-      <feDisplacementMap id="agoraSweep{sfx}" in="g1" in2="flow" scale="{P['sweep']}" xChannelSelector="R" yChannelSelector="G" result="g2"/>
+      <feTurbulence id="aporiaGrainNoise{sfx}" type="fractalNoise" baseFrequency="{P['grain_fx']} {P['grain_fy']}" numOctaves="{P['grain_oct']}" seed="{P['grain_seed']}" result="g0"/>
+      <feOffset id="aporiaGrainShift{sfx}" in="g0" dx="0" dy="0" result="g1"/>
+      <feDisplacementMap id="aporiaSweep{sfx}" in="g1" in2="flow" scale="{P['sweep']}" xChannelSelector="R" yChannelSelector="G" result="g2"/>
       <feColorMatrix in="g2" type="matrix" result="grain"
         values="{gs} 0 0 0 {gi} {gs} 0 0 0 {gi} {gs} 0 0 0 {gi} 0 0 0 0 1"/>
       <!-- scie: polvere trascinata lungo il fiume -->
-      <feTurbulence id="agoraStreakNoise{sfx}" type="fractalNoise" baseFrequency="{P['streak_fx']} {P['streak_fy']}" numOctaves="{P['streak_oct']}" seed="{P['streak_seed']}" result="t0"/>
-      <feOffset id="agoraStreakShift{sfx}" in="t0" dx="0" dy="0" result="t1"/>
+      <feTurbulence id="aporiaStreakNoise{sfx}" type="fractalNoise" baseFrequency="{P['streak_fx']} {P['streak_fy']}" numOctaves="{P['streak_oct']}" seed="{P['streak_seed']}" result="t0"/>
+      <feOffset id="aporiaStreakShift{sfx}" in="t0" dx="0" dy="0" result="t1"/>
       <feDisplacementMap in="t1" in2="flow" scale="{P['streak_sweep']}" xChannelSelector="G" yChannelSelector="R" result="t2"/>
       <feColorMatrix in="t2" type="matrix" result="streak"
         values="{ts} 0 0 0 {ti} {ts} 0 0 0 {ti} {ts} 0 0 0 {ti} 0 0 0 0 1"/>
       <!-- sui bianchi la polvere si dirada piano piano (come nell'originale), niente confine netto -->
-      <feComponentTransfer id="agoraHighlight{sfx}" in="surface" result="hl">
+      <feComponentTransfer id="aporiaHighlight{sfx}" in="surface" result="hl">
         <feFuncR type="table" tableValues="{P['highlight']}"/><feFuncG type="table" tableValues="{P['highlight']}"/><feFuncB type="table" tableValues="{P['highlight']}"/>
       </feComponentTransfer>
       <feComposite in="k" in2="hl" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="kh"/>
@@ -102,11 +102,11 @@ def dust_filter(fid, P, invert=False, animated=True):
       <feComposite in="gK" in2="sK" operator="arithmetic" k1="0" k2="1" k3="1" k4="-0.5" result="texture"/>
       <feBlend in="texture" in2="surface" mode="overlay" result="dusted"/>
       <!-- tono: curva che lascia fermi nero e bianco (esposizione e contrasto senza tagli netti) -->
-      <feComponentTransfer id="agoraTone{sfx}" in="dusted" result="base">
+      <feComponentTransfer id="aporiaTone{sfx}" in="dusted" result="base">
         <feFuncR type="table" tableValues="0 1"/><feFuncG type="table" tableValues="0 1"/><feFuncB type="table" tableValues="0 1"/>
       </feComponentTransfer>
       <!-- granelli: grumi irregolari, trascinati dal flusso -->
-      <feTurbulence id="agoraSpeckNoise{sfx}" type="fractalNoise" baseFrequency="{P['speck_fx']} {P['speck_fy']}" numOctaves="{P['speck_oct']}" seed="{P['speck_seed']}" result="s0"/>
+      <feTurbulence id="aporiaSpeckNoise{sfx}" type="fractalNoise" baseFrequency="{P['speck_fx']} {P['speck_fy']}" numOctaves="{P['speck_oct']}" seed="{P['speck_seed']}" result="s0"/>
       <feDisplacementMap in="s0" in2="flow" scale="{P['speck_sweep']}" xChannelSelector="G" yChannelSelector="R" result="s1"/>
       <feColorMatrix in="s1" type="matrix" result="s2" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
       <feComponentTransfer in="s2" result="speck">
@@ -115,13 +115,13 @@ def dust_filter(fid, P, invert=False, animated=True):
       <feColorMatrix in="speck" type="luminanceToAlpha" result="speckA"/>
       <!-- i granelli stanno dove c'è luce e si disperdono poco oltre -->
       <feColorMatrix in="surface" type="luminanceToAlpha" result="lum"/>
-      <feGaussianBlur id="agoraHalo{sfx}" in="lum" stdDeviation="{P['halo']}" result="halo"/>
+      <feGaussianBlur id="aporiaHalo{sfx}" in="lum" stdDeviation="{P['halo']}" result="halo"/>
       <feComposite in="speckA" in2="halo" operator="in" result="speckLit0"/>
       <!-- fuori dalla lettera solo nella zona morbida (la sagoma è nel canale alpha) -->
       <feComposite in="speckLit0" in2="SourceAlpha" operator="in" result="speckLit"/>
       <feFlood flood-color="#fff" result="white"/>
       <feComposite in="white" in2="speckLit" operator="in" result="speckW0"/>
-      <feComponentTransfer in="speckW0" result="speckW"><feFuncA id="agoraSpeckGain{sfx}" type="linear" slope="{P['speck_gain']}" intercept="0"/></feComponentTransfer>{tail}{anim}
+      <feComponentTransfer in="speckW0" result="speckW"><feFuncA id="aporiaSpeckGain{sfx}" type="linear" slope="{P['speck_gain']}" intercept="0"/></feComponentTransfer>{tail}{anim}
     </filter>'''
 
 def edge_filter(fid, P, open_top):
@@ -153,7 +153,7 @@ def edge_filter(fid, P, open_top):
     </filter>'''
 
 def emit(hull_d, open_d, zone_d, levels, glows, klevels, k_bg=0.87, P=P4, animated=True,
-         title='Agorà — logo dust', y_soft_end=838.4, drag_y0=640, drag_y1=780, slevels=()):
+         title='Aporia — logo dust', y_soft_end=838.4, drag_y0=640, drag_y1=780, slevels=()):
     import re
     base_y = max(float(v) for v in re.findall(r'-?\d+\.?\d*', hull_d)[1::2])
     lv = "\n        ".join(f'<path fill="{rg(t)}" d="{d}"/>' for t, d in levels)
@@ -161,119 +161,119 @@ def emit(hull_d, open_d, zone_d, levels, glows, klevels, k_bg=0.87, P=P4, animat
     kl = "\n        ".join(f'<path fill="{bl(t)}" d="{d}"/>' for t, d in klevels)
     sl = "\n        ".join(f'<path fill="{gr(t)}" d="{d}"/>' for t, d in slevels)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="0 0 1254 1254" width="1254" height="1254" id="agoraDustLogo"
-     role="img" aria-labelledby="agoraTitle agoraDesc">
-  <title id="agoraTitle">{title}</title>
-  <desc id="agoraDesc">Logo Agorà con polvere procedurale. Il disegno è una maschera:
+     viewBox="0 0 1254 1254" width="1254" height="1254" id="aporiaDustLogo"
+     role="img" aria-labelledby="aporiaTitle aporiaDesc">
+  <title id="aporiaTitle">{title}</title>
+  <desc id="aporiaDesc">Logo Aporia con polvere procedurale. Il disegno è una maschera:
   --ink colore o gradiente, --bg fondo (trasparente di default), --mask polarità.</desc>
   <style>
-    #agoraDustLogo {{
-      --ink: #ffffff; --bg: transparent; --mask: url(#agoraMaskLight);
+    #aporiaDustLogo {{
+      --ink: #ffffff; --bg: transparent; --mask: url(#aporiaMaskLight);
       --glow: 1; --dust: 1;
       --c1: #ff8a3d; --c2: #ff2e63; --c3: #4d5bff;
     }}
-    #agoraBg   {{ fill: var(--bg); }}
-    #agoraInk  {{ fill: var(--ink); mask: var(--mask); }}
-    #agoraGlowLayer {{ opacity: var(--glow); }}
-    #agoraDustyLight, #agoraDustyDark {{ opacity: var(--dust); }}
-    #agoraLight, #agoraLightDark, #agoraDragMap, #agoraEdgeLetter {{ mix-blend-mode: screen; }}
+    #aporiaBg   {{ fill: var(--bg); }}
+    #aporiaInk  {{ fill: var(--ink); mask: var(--mask); }}
+    #aporiaGlowLayer {{ opacity: var(--glow); }}
+    #aporiaDustyLight, #aporiaDustyDark {{ opacity: var(--dust); }}
+    #aporiaLight, #aporiaLightDark, #aporiaDragMap, #aporiaEdgeLetter {{ mix-blend-mode: screen; }}
     @media (prefers-reduced-motion: reduce) {{
-      #agoraBoil, #agoraDriftX, #agoraDriftY, #agoraStream, #agoraSwirl, #agoraFlow {{ display: none; }}
+      #aporiaBoil, #aporiaDriftX, #aporiaDriftY, #aporiaStream, #aporiaSwirl, #aporiaFlow {{ display: none; }}
     }}
   </style>
   <defs>
-    <linearGradient id="agoraGradient" x1="0" y1="1" x2="1" y2="0">
+    <linearGradient id="aporiaGradient" x1="0" y1="1" x2="1" y2="0">
       <stop offset="0" stop-color="var(--c1)"/><stop offset="0.5" stop-color="var(--c2)"/><stop offset="1" stop-color="var(--c3)"/>
     </linearGradient>
 
-    <filter id="agoraSoften" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <filter id="aporiaSoften" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="{P['soften']}"/>
     </filter>
-    <filter id="agoraBloom" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+    <filter id="aporiaBloom" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="{P['glow_sigma']}"/>
     </filter>
     <!-- superficie pulita (--dust: 0): legge solo il canale della luce -->
-    <filter id="agoraPlain" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <filter id="aporiaPlain" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feColorMatrix type="matrix" values="{R2RGB}"/>
     </filter>
     <!-- inversione per la polarità scuro-su-chiaro (stessa polvere, stesse animazioni) -->
-    <filter id="agoraInvert" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <filter id="aporiaInvert" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feFlood flood-color="#000" result="black"/>
       <feComposite in="SourceGraphic" in2="black" operator="over" result="o"/>
       <feColorMatrix in="o" type="matrix" values="-1 0 0 0 1  -1 0 0 0 1  -1 0 0 0 1  0 0 0 0 1"/>
     </filter>
-    <linearGradient id="agoraDragFade" gradientUnits="userSpaceOnUse" x1="0" y1="{drag_y0}" x2="0" y2="{drag_y1}">
+    <linearGradient id="aporiaDragFade" gradientUnits="userSpaceOnUse" x1="0" y1="{drag_y0}" x2="0" y2="{drag_y1}">
       <stop offset="0" stop-color="#00ff00"/><stop offset="1" stop-color="#000000"/>
     </linearGradient>
-    {edge_filter('agoraEdge', P, True)}
-    {edge_filter('agoraEdgeShape', P, False)}
+    {edge_filter('aporiaEdge', P, True)}
+    {edge_filter('aporiaEdgeShape', P, False)}
     <!-- sagoma (rosso) e morbidezza del bordo (verde): netta su lati, cima e base,
          sempre più sfumata verso fiume e bandiera, senza salti -->
-    <g id="agoraEdgeSource">
+    <g id="aporiaEdgeSource">
       <rect x="-40" y="-40" width="1334" height="1334" fill="#000"/>
-      <g id="agoraEdgeSoftness">
+      <g id="aporiaEdgeSoftness">
         {sl}
       </g>
-      <g id="agoraEdgeLetter">
+      <g id="aporiaEdgeLetter">
         <path fill="#f00" d="{hull_d}"/>
         <path fill="#000" d="{open_d}"/>
       </g>
     </g>
     <!-- sagoma per la versione inversa: sfuma ma resta dentro la lettera -->
-    <mask id="agoraShape" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g filter="url(#agoraEdgeShape)"><use xlink:href="#agoraEdgeSource"/></g>
+    <mask id="aporiaShape" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
+      <g filter="url(#aporiaEdgeShape)"><use xlink:href="#aporiaEdgeSource"/></g>
       <rect x="-40" y="{base_y}" width="1334" height="400" fill="#000"/>
     </mask>
     <!-- superficie: dove il bordo è morbido decide solo la luce -->
-    <mask id="agoraSurface" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g filter="url(#agoraEdge)"><use xlink:href="#agoraEdgeSource"/></g>
+    <mask id="aporiaSurface" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
+      <g filter="url(#aporiaEdge)"><use xlink:href="#aporiaEdgeSource"/></g>
       <!-- sotto la base non passa nulla: base netta e a 0° -->
       <rect x="-40" y="{base_y}" width="1334" height="400" fill="#000"/>
     </mask>
 
-    {dust_filter('agoraDustFx', P, invert=False, animated=animated)}
+    {dust_filter('aporiaDustFx', P, invert=False, animated=animated)}
 
     <!-- luce non ritagliata (prolungata oltre i bordi netti) -->
-    <g id="agoraFieldRaw" filter="url(#agoraSoften)">
+    <g id="aporiaFieldRaw" filter="url(#aporiaSoften)">
         {lv}
     </g>
     <!-- sorgente della polvere: rosso = luce, blu = intensità della grana, verde = trascinamento -->
-    <g id="agoraSource">
-      <g id="agoraMaps" mask="url(#agoraSurface)">
-      <g id="agoraGrainMap">
+    <g id="aporiaSource">
+      <g id="aporiaMaps" mask="url(#aporiaSurface)">
+      <g id="aporiaGrainMap">
         <rect x="-40" y="-40" width="1334" height="1334" fill="{bl(k_bg)}"/>
         {kl}
       </g>
-      <rect id="agoraDragMap" x="-40" y="-40" width="1334" height="1334" fill="url(#agoraDragFade)"/>
+      <rect id="aporiaDragMap" x="-40" y="-40" width="1334" height="1334" fill="url(#aporiaDragFade)"/>
       </g>
-      <g id="agoraLight">
-        <g id="agoraGlowLayer">
-          <g id="agoraGlowField" filter="url(#agoraBloom)">
+      <g id="aporiaLight">
+        <g id="aporiaGlowLayer">
+          <g id="aporiaGlowField" filter="url(#aporiaBloom)">
             {gw}
           </g>
         </g>
-        <g id="agoraField" mask="url(#agoraSurface)"><use xlink:href="#agoraFieldRaw"/></g>
+        <g id="aporiaField" mask="url(#aporiaSurface)"><use xlink:href="#aporiaFieldRaw"/></g>
       </g>
     </g>
 
-    <mask id="agoraMaskLight" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g filter="url(#agoraPlain)"><use xlink:href="#agoraSource"/></g>
-      <g id="agoraDustyLight" filter="url(#agoraDustFx)"><use xlink:href="#agoraSource"/></g>
+    <mask id="aporiaMaskLight" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
+      <g filter="url(#aporiaPlain)"><use xlink:href="#aporiaSource"/></g>
+      <g id="aporiaDustyLight" filter="url(#aporiaDustFx)"><use xlink:href="#aporiaSource"/></g>
     </mask>
     <!-- versione inversa: la luce non ritagliata, il bordo lo decide solo la sagoma
          (se la luce venisse tagliata due volte resterebbe un filo scuro lungo il contorno) -->
-    <g id="agoraSourceDark">
-      <use xlink:href="#agoraMaps"/>
-      <g id="agoraLightDark"><use xlink:href="#agoraFieldRaw"/></g>
+    <g id="aporiaSourceDark">
+      <use xlink:href="#aporiaMaps"/>
+      <g id="aporiaLightDark"><use xlink:href="#aporiaFieldRaw"/></g>
     </g>
-    <mask id="agoraMaskDark" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
-      <g mask="url(#agoraShape)"><g filter="url(#agoraInvert)">
-        <g filter="url(#agoraPlain)"><use xlink:href="#agoraSourceDark"/></g>
-        <g id="agoraDustyDark" filter="url(#agoraDustFx)"><use xlink:href="#agoraSourceDark"/></g>
+    <mask id="aporiaMaskDark" maskUnits="userSpaceOnUse" x="-40" y="-40" width="1334" height="1334">
+      <g mask="url(#aporiaShape)"><g filter="url(#aporiaInvert)">
+        <g filter="url(#aporiaPlain)"><use xlink:href="#aporiaSourceDark"/></g>
+        <g id="aporiaDustyDark" filter="url(#aporiaDustFx)"><use xlink:href="#aporiaSourceDark"/></g>
       </g></g>
     </mask>
   </defs>
-  <rect id="agoraBg" width="1254" height="1254"/>
-  <rect id="agoraInk" width="1254" height="1254"/>
+  <rect id="aporiaBg" width="1254" height="1254"/>
+  <rect id="aporiaInk" width="1254" height="1254"/>
 </svg>
 '''

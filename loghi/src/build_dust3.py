@@ -56,7 +56,7 @@ def make_svg(P, shape_d, levels=None, animate=True, ids=True):
                      f'values="{P["warp_freq"]};{P["warp_freq"]*1.3};{P["warp_freq"]}" repeatCount="indefinite"/>')
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254">
   <defs>
-    <clipPath id="agoraClip"><path d="{shape_d}"/></clipPath>
+    <clipPath id="aporiaClip"><path d="{shape_d}"/></clipPath>
     <filter id="soften" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="{P['post_sigma']}"/>
     </filter>
@@ -85,16 +85,16 @@ def make_svg(P, shape_d, levels=None, animate=True, ids=True):
   </defs>
   <rect width="1254" height="1254" fill="#000"/>
   <g filter="url(#dust)">
-    <g id="agoraShaded">
-      <g clip-path="url(#agoraClip)" filter="url(#soften)">
+    <g id="aporiaShaded">
+      <g clip-path="url(#aporiaClip)" filter="url(#soften)">
         <path fill="#000" d="{shape_d}"/>
         {lv}
       </g>
     </g>
-    <g id="agoraGlow" filter="url(#bloom)" opacity="{P['glow_opacity']}">
+    <g id="aporiaGlow" filter="url(#bloom)" opacity="{P['glow_opacity']}">
         {gw}
     </g>
-    <use href="#agoraShaded"/>
+    <use href="#aporiaShaded"/>
   </g>
 </svg>
 '''

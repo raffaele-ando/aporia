@@ -15,7 +15,7 @@ def render(svgs):
         b=p.chromium.launch(executable_path=CHROME,args=['--no-sandbox','--disable-gpu'])
         pg=b.new_page(viewport={'width':1254,'height':1254})
         for i,s in enumerate(svgs):
-            pg.set_content(f'<!doctype html><html><head><style>html,body{{margin:0;background:#000}}svg{{display:block}}</style></head><body>{s}<style>svg#agoraDustLogo{{--bg:#000}}</style></body></html>')
+            pg.set_content(f'<!doctype html><html><head><style>html,body{{margin:0;background:#000}}svg{{display:block}}</style></head><body>{s}<style>svg#aporiaDustLogo{{--bg:#000}}</style></body></html>')
             pg.wait_for_timeout(250); pg.screenshot(path=f'/tmp/v3_{i}.png', clip={'x':0,'y':0,'width':1254,'height':1254})
             out.append(np.array(Image.open(f'/tmp/v3_{i}.png').convert('L')).astype(float)/255)
         b.close()

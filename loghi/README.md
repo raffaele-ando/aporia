@@ -1,25 +1,27 @@
-# Agorà — loghi SVG
+# Aporia — loghi SVG
 
-Ricostruzione vettoriale dei due loghi Agorà a partire dalle immagini caricate.
+> Loghi di **Aporia**. Nel repository personale in cui sono nati la cartella si chiamava per errore `agora_loghi_svg`. Lo storico dei commit è conservato: `git log HEAD^2` sul commit che ha aggiunto la cartella `loghi/`.
+
+Ricostruzione vettoriale dei due loghi Aporia a partire dalle immagini caricate.
 SVG puri: nessuna immagine raster incorporata, nessuna dipendenza esterna.
 
 ## File
 
 | File | Cosa contiene |
 |---|---|
-| `agora-logo.svg` | Logo pulito, lettera corretta. Ritagliato sulla forma, fondo trasparente, `fill="currentColor"` |
-| `agora-logo-dust.svg` | Versione polvere, animata, **fondo trasparente** e colore/gradiente liberi (1254×1254) |
-| `agora-logo-dust-static.svg` | Come sopra ma senza animazioni (stampa, export) |
-| `agora-logo-dust-inverted.svg` | Versione polvere già impostata scura su fondo chiaro |
-| `agora-logo-dust-tight.svg` | Versione polvere ritagliata sulla forma |
-| `agora-logo-tracciato-fedele.svg` | Tracciato fedele al pixel dell'immagine caricata (senza correzione della lettera) |
-| `agora-dust-lab.html` | Laboratorio: colore, gradiente, polarità, polvere e animazioni dal vivo, con export |
+| `aporia-logo.svg` | Logo pulito, lettera corretta. Ritagliato sulla forma, fondo trasparente, `fill="currentColor"` |
+| `aporia-logo-dust.svg` | Versione polvere, animata, **fondo trasparente** e colore/gradiente liberi (1254×1254) |
+| `aporia-logo-dust-static.svg` | Come sopra ma senza animazioni (stampa, export) |
+| `aporia-logo-dust-inverted.svg` | Versione polvere già impostata scura su fondo chiaro |
+| `aporia-logo-dust-tight.svg` | Versione polvere ritagliata sulla forma |
+| `aporia-logo-tracciato-fedele.svg` | Tracciato fedele al pixel dell'immagine caricata (senza correzione della lettera) |
+| `aporia-dust-lab.html` | Laboratorio: colore, gradiente, polarità, polvere e animazioni dal vivo, con export |
 | `preview/` | Anteprime PNG e tavola di costruzione |
 
 ## 1. La lettera prima di tutto
 
 La A è costruita con uno scheletro esattamente simmetrico rispetto all'asse centrale
-(tavola in `preview/costruzione.png`). Valori nel file `agora-logo.svg`:
+(tavola in `preview/costruzione.png`). Valori nel file `aporia-logo.svg`:
 
 | Elemento | Sinistra | Destra |
 |---|---|---|
@@ -42,7 +44,7 @@ La stessa lettera è usata sotto la polvere (anche lì base e cima a 0° e simme
 dall'asse, verificate sul file).
 
 Se ti serve il disegno esattamente com'era nell'immagine caricata, usa
-`agora-logo-tracciato-fedele.svg`.
+`aporia-logo-tracciato-fedele.svg`.
 
 ## 2. Colore, gradiente, trasparenza
 
@@ -54,84 +56,84 @@ La versione dust non è più "grigi su fondo nero": il disegno è una **maschera
 <div style="background:#12141a">…svg incollato…</div>
 
 <!-- tinta piatta -->
-<style> #agoraDustLogo { --ink: #ff4d2e; } </style>
+<style> #aporiaDustLogo { --ink: #ff4d2e; } </style>
 
 <!-- gradiente a 3 colori (già presente nel file) -->
-<style> #agoraDustLogo { --ink: url(#agoraGradient); --c1:#ff8a3d; --c2:#ff2e63; --c3:#4d5bff; } </style>
+<style> #aporiaDustLogo { --ink: url(#aporiaGradient); --c1:#ff8a3d; --c2:#ff2e63; --c3:#4d5bff; } </style>
 
 <!-- da chiaro-su-scuro a scuro-su-chiaro: una riga -->
-<style> #agoraDustLogo { --mask: url(#agoraMaskDark); --ink:#101014; --bg:#f2efe9; } </style>
+<style> #aporiaDustLogo { --mask: url(#aporiaMaskDark); --ink:#101014; --bg:#f2efe9; } </style>
 ```
 
 | Variabile | Cosa fa | Default |
 |---|---|---|
-| `--ink` | colore del logo: tinta piatta o `url(#agoraGradient)` (o un tuo gradiente) | `#ffffff` |
+| `--ink` | colore del logo: tinta piatta o `url(#aporiaGradient)` (o un tuo gradiente) | `#ffffff` |
 | `--bg` | fondo: `transparent`, un colore, o un altro paint | `transparent` |
-| `--mask` | polarità: `url(#agoraMaskLight)` chiaro su scuro, `url(#agoraMaskDark)` scuro su chiaro | light |
+| `--mask` | polarità: `url(#aporiaMaskLight)` chiaro su scuro, `url(#aporiaMaskDark)` scuro su chiaro | light |
 | `--c1` `--c2` `--c3` | i tre colori del gradiente pronto | arancio/rosa/blu |
 | `--glow` | 0…1.5 intensità dell'alone sui bordi | `1` |
 | `--dust` | 0 = superficie pulita, 1 = polvere piena | `1` |
 
-Il gradiente è un normale `<linearGradient id="agoraGradient">`: puoi cambiarne i colori,
+Il gradiente è un normale `<linearGradient id="aporiaGradient">`: puoi cambiarne i colori,
 l'angolo, o sostituirlo con un gradiente radiale o conico tuo.
 
 ## 3. La polvere: com'è fatta e cosa toccare
 
 Strati, tutti vettoriali:
 
-1. **Campo luminoso** (`#agoraFieldRaw`): 45 tracciati annidati (isolivelli), fitti sia nelle
-   ombre sia nei bianchi così le sfumature non fanno gradini, ammorbiditi da `#agoraSoften`.
+1. **Campo luminoso** (`#aporiaFieldRaw`): 45 tracciati annidati (isolivelli), fitti sia nelle
+   ombre sia nei bianchi così le sfumature non fanno gradini, ammorbiditi da `#aporiaSoften`.
    È la "luce" del logo.
-2. **Sagoma** (`#agoraEdgeSource` → `#agoraSurface`): la lettera (rosso) più una mappa di
-   morbidezza del bordo (verde). Il filtro `#agoraEdge` rende il bordo netto su lati, cima e base
+2. **Sagoma** (`#aporiaEdgeSource` → `#aporiaSurface`): la lettera (rosso) più una mappa di
+   morbidezza del bordo (verde). Il filtro `#aporiaEdge` rende il bordo netto su lati, cima e base
    e sempre più sfumato verso fiume e bandiera, senza salti: dove il lato della cima entra
    nella bandiera il bordo curva e si scioglie piano, invece di fare un angolo.
-3. **Alone** (`#agoraGlowField`): la frangia luminosa che esce dalla sagoma, sfocata da `#agoraBloom`.
-4. **Mappe** (`#agoraGrainMap`, `#agoraDragMap`): dicono al filtro quanta grana mettere e dove
+3. **Alone** (`#aporiaGlowField`): la frangia luminosa che esce dalla sagoma, sfocata da `#aporiaBloom`.
+4. **Mappe** (`#aporiaGrainMap`, `#aporiaDragMap`): dicono al filtro quanta grana mettere e dove
    la polvere è trascinata. L'intensità è misurata sull'originale: grana piena sul corpo della A,
    polvere liscia e a scie nel fiume.
-5. **Motore polvere** (`#agoraDustFx`): il filtro che genera e muove la polvere.
+5. **Motore polvere** (`#aporiaDustFx`): il filtro che genera e muove la polvere.
 
 | Nodo / attributo | Effetto |
 |---|---|
-| `#agoraGrainNoise` `baseFrequency` | dimensione del grano: più basso = grana più grossa |
-| `#agoraGrainNoise` `numOctaves` / `seed` | ricchezza della grana / disegno della grana a parità di statistica |
+| `#aporiaGrainNoise` `baseFrequency` | dimensione del grano: più basso = grana più grossa |
+| `#aporiaGrainNoise` `numOctaves` / `seed` | ricchezza della grana / disegno della grana a parità di statistica |
 | `feColorMatrix result="grain"` | il primo numero della matrice è l'**intensità** della grana (1.8) |
-| `#agoraStreakNoise` `baseFrequency` | forma delle scie (x basso = scie lunghe, y alto = scie sottili) |
+| `#aporiaStreakNoise` `baseFrequency` | forma delle scie (x basso = scie lunghe, y alto = scie sottili) |
 | `feColorMatrix result="streak"` | intensità delle scie (1.2) |
-| `#agoraSweep` `scale` | quanto la grana viene piegata e trascinata dal flusso |
-| `#agoraGrainMapBlur` `stdDeviation` | morbidezza del passaggio tra zone granulose e zone lisce |
-| `#agoraSpeckNoise` + `slope`/`intercept` | dimensione, densità e soglia dei granelli sparsi |
-| `#agoraSpeckGain` `slope` | luminosità dei granelli (0 = spenti) |
-| `#agoraHalo` `stdDeviation` | quanto i granelli si disperdono oltre la luce (solo nella zona morbida) |
-| `#agoraDisplace` `scale` | turbolenza che deforma il logo (0 fermo · 3-6 respiro · 20+ dissolve) |
-| `#agoraFlowNoise` `baseFrequency` | scala del vortice di flusso |
-| `#agoraGrainShift` `dx`/`dy` · `#agoraStreakShift` `dx` | scorrimento di grana e scie |
-| `#agoraTone` `tableValues` | curva di tono (esposizione/contrasto): nero e bianco restano fermi, il fondo resta trasparente |
-| `#agoraHighlight` `tableValues` | quanta polvere per fascia di luce, dal nero al bianco: sui bianchi si dirada piano |
-| `#agoraEdge` / `#agoraEdgeShape` `stdDeviation` | morbidezza del bordo, dal netto (0.6) al più sfumato |
-| `#agoraSoften` / `#agoraBloom` `stdDeviation` | morbidezza della luce · diffusione dell'alone |
+| `#aporiaSweep` `scale` | quanto la grana viene piegata e trascinata dal flusso |
+| `#aporiaGrainMapBlur` `stdDeviation` | morbidezza del passaggio tra zone granulose e zone lisce |
+| `#aporiaSpeckNoise` + `slope`/`intercept` | dimensione, densità e soglia dei granelli sparsi |
+| `#aporiaSpeckGain` `slope` | luminosità dei granelli (0 = spenti) |
+| `#aporiaHalo` `stdDeviation` | quanto i granelli si disperdono oltre la luce (solo nella zona morbida) |
+| `#aporiaDisplace` `scale` | turbolenza che deforma il logo (0 fermo · 3-6 respiro · 20+ dissolve) |
+| `#aporiaFlowNoise` `baseFrequency` | scala del vortice di flusso |
+| `#aporiaGrainShift` `dx`/`dy` · `#aporiaStreakShift` `dx` | scorrimento di grana e scie |
+| `#aporiaTone` `tableValues` | curva di tono (esposizione/contrasto): nero e bianco restano fermi, il fondo resta trasparente |
+| `#aporiaHighlight` `tableValues` | quanta polvere per fascia di luce, dal nero al bianco: sui bianchi si dirada piano |
+| `#aporiaEdge` / `#aporiaEdgeShape` `stdDeviation` | morbidezza del bordo, dal netto (0.6) al più sfumato |
+| `#aporiaSoften` / `#aporiaBloom` `stdDeviation` | morbidezza della luce · diffusione dell'alone |
 
 ### Animazioni
 
-Sei `<animate>` SMIL, ognuna con id, dentro `#agoraDustFx`. Le due polarità (chiaro su scuro,
+Sei `<animate>` SMIL, ognuna con id, dentro `#aporiaDustFx`. Le due polarità (chiaro su scuro,
 scuro su chiaro) usano lo stesso filtro: animazioni e parametri valgono per entrambe.
 
 | id | Cosa fa | Durata |
 |---|---|---|
-| `#agoraBoil` | la grana "vive" (come la grana pellicola) | 1.1 s |
-| `#agoraDriftX` / `#agoraDriftY` | la polvere scorre sulla superficie | 26 s / 37 s |
-| `#agoraStream` | le scie scorrono lungo il fiume | 19 s |
-| `#agoraSwirl` | la polvere si piega nel flusso | 17 s |
-| `#agoraFlow` | il campo di flusso cambia forma | 23 s |
+| `#aporiaBoil` | la grana "vive" (come la grana pellicola) | 1.1 s |
+| `#aporiaDriftX` / `#aporiaDriftY` | la polvere scorre sulla superficie | 26 s / 37 s |
+| `#aporiaStream` | le scie scorrono lungo il fiume | 19 s |
+| `#aporiaSwirl` | la polvere si piega nel flusso | 17 s |
+| `#aporiaFlow` | il campo di flusso cambia forma | 23 s |
 
 Per fermarle: usa il file `-static`, elimina i tag `<animate>`, oppure da JS
-`document.querySelector('#agoraBoil').endElement()`. Chi ha attivo "riduci movimento"
+`document.querySelector('#aporiaBoil').endElement()`. Chi ha attivo "riduci movimento"
 nel sistema operativo vede già la versione ferma.
 
 ### Laboratorio
 
-`agora-dust-lab.html`, doppio click, funziona offline: tinta o gradiente a 3 colori con
+`aporia-dust-lab.html`, doppio click, funziona offline: tinta o gradiente a 3 colori con
 angolo, inversione chiaro/scuro, fondo (anche trasparente), tutti i parametri della polvere
 (grana, scie, trascinamento, granelli e loro dispersione), velocità e interruttori delle
 animazioni, export SVG e PNG 2048.

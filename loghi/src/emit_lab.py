@@ -1,7 +1,7 @@
 import json, sys
 sys.path.insert(0, 'src')
 from emit_v4 import P4
-svg = open('agora-logo-dust.svg').read()
+svg = open('aporia-logo-dust.svg').read()
 svg_inline = svg.replace('width="1254" height="1254"', 'width="100%" height="100%" preserveAspectRatio="xMidYMid meet"', 1)
 P = P4
 
@@ -9,7 +9,7 @@ HTML = r'''<!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agorà · Dust Lab</title>
+<title>Aporia · Dust Lab</title>
 <style>
   :root { --bg:#08090b; --panel:#101216; --line:#1e222a; --txt:#e8eaee; --dim:#8a92a0; --acc:#d8dee9; }
   * { box-sizing:border-box; }
@@ -46,7 +46,7 @@ HTML = r'''<!doctype html>
 <body>
 <div class="wrap">
   <aside>
-    <h1>Agorà · Dust Lab</h1>
+    <h1>Aporia · Dust Lab</h1>
     <p class="sub">Il logo è una maschera: colore, gradiente, fondo e polarità si cambiano al volo. Esporta quando ti piace.</p>
 
     <fieldset><legend>Colore</legend>
@@ -146,20 +146,20 @@ __SVG__
 </div>
 <script>
 const $ = s => document.querySelector(s);
-const svg = $('#agoraDustLogo');
+const svg = $('#aporiaDustLogo');
 const N = {
-  grain: $('#agoraGrainNoise'), shift: $('#agoraGrainShift'), speck: $('#agoraSpeckNoise'),
-  flow: $('#agoraFlowNoise'), disp: $('#agoraDisplace'),
-  bloom: $('#agoraBloom').querySelector('feGaussianBlur'),
-  soften: $('#agoraSoften').querySelector('feGaussianBlur'),
-  grad: $('#agoraGradient'), halo: $('#agoraHalo'), sweep: $('#agoraSweep'),
+  grain: $('#aporiaGrainNoise'), shift: $('#aporiaGrainShift'), speck: $('#aporiaSpeckNoise'),
+  flow: $('#aporiaFlowNoise'), disp: $('#aporiaDisplace'),
+  bloom: $('#aporiaBloom').querySelector('feGaussianBlur'),
+  soften: $('#aporiaSoften').querySelector('feGaussianBlur'),
+  grad: $('#aporiaGradient'), halo: $('#aporiaHalo'), sweep: $('#aporiaSweep'),
 };
-const speckFns = [...svg.querySelectorAll('#agoraDustFx feComponentTransfer feFuncR, #agoraDustFx feComponentTransfer feFuncG, #agoraDustFx feComponentTransfer feFuncB')]
+const speckFns = [...svg.querySelectorAll('#aporiaDustFx feComponentTransfer feFuncR, #aporiaDustFx feComponentTransfer feFuncG, #aporiaDustFx feComponentTransfer feFuncB')]
   .filter(f => f.getAttribute('type') === 'linear' && f.parentNode.getAttribute('result') === 'speck');
-const toneFns = [...svg.querySelectorAll('#agoraTone > *')];
-const grainMat = svg.querySelector('#agoraDustFx feColorMatrix[result="grain"]');
-const streakMat = svg.querySelector('#agoraDustFx feColorMatrix[result="streak"]');
-const ANIM = { boil:$('#agoraBoil'), driftX:$('#agoraDriftX'), driftY:$('#agoraDriftY'), stream:$('#agoraStream'), swirl:$('#agoraSwirl'), flow:$('#agoraFlow') };
+const toneFns = [...svg.querySelectorAll('#aporiaTone > *')];
+const grainMat = svg.querySelector('#aporiaDustFx feColorMatrix[result="grain"]');
+const streakMat = svg.querySelector('#aporiaDustFx feColorMatrix[result="streak"]');
+const ANIM = { boil:$('#aporiaBoil'), driftX:$('#aporiaDriftX'), driftY:$('#aporiaDriftY'), stream:$('#aporiaStream'), swirl:$('#aporiaSwirl'), flow:$('#aporiaFlow') };
 const BASE_DUR = {}; Object.entries(ANIM).forEach(([k,a]) => { if (a) BASE_DUR[k] = parseFloat(a.getAttribute('dur')); });
 
 const DEF = {
@@ -204,9 +204,9 @@ function apply(){
   N.bloom.setAttribute('stdDeviation', S.gb); N.soften.setAttribute('stdDeviation', S.sof);
   setTone(S.ton, S.lev); gradAngle(S.gang);
   svg.style.setProperty('--dust', S.amt); svg.style.setProperty('--glow', S.glo);
-  svg.style.setProperty('--ink', paintMode === 'grad' ? 'url(#agoraGradient)' : ink);
+  svg.style.setProperty('--ink', paintMode === 'grad' ? 'url(#aporiaGradient)' : ink);
   svg.style.setProperty('--bg', bgOff ? 'transparent' : bg);
-  svg.style.setProperty('--mask', polarity === 'dark' ? 'url(#agoraMaskDark)' : 'url(#agoraMaskLight)');
+  svg.style.setProperty('--mask', polarity === 'dark' ? 'url(#aporiaMaskDark)' : 'url(#aporiaMaskLight)');
   cols.forEach((c,i) => svg.style.setProperty('--c'+(i+1), c));
   $('#stage').classList.toggle('checker', bgOff);
   const on = { boil:$('#a_boil').checked, driftX:$('#a_drift').checked, driftY:$('#a_drift').checked, stream:$('#a_stream').checked,
@@ -249,10 +249,10 @@ function currentSVG(){
 }
 function download(name, blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
-$('#export').addEventListener('click', () => download('agora-logo-dust-custom.svg', new Blob([currentSVG()],{type:'image/svg+xml'})));
+$('#export').addEventListener('click', () => download('aporia-logo-dust-custom.svg', new Blob([currentSVG()],{type:'image/svg+xml'})));
 $('#png').addEventListener('click', () => { const size=2048; const url=URL.createObjectURL(new Blob([currentSVG()],{type:'image/svg+xml'}));
   const img=new Image(); img.onload=()=>{ const cv=document.createElement('canvas'); cv.width=cv.height=size;
-    cv.getContext('2d').drawImage(img,0,0,size,size); cv.toBlob(b=>download('agora-logo-dust.png',b),'image/png'); URL.revokeObjectURL(url); };
+    cv.getContext('2d').drawImage(img,0,0,size,size); cv.toBlob(b=>download('aporia-logo-dust.png',b),'image/png'); URL.revokeObjectURL(url); };
   img.src=url; });
 apply();
 </script>
@@ -265,5 +265,5 @@ out = (HTML.replace('__SVG__', svg_inline)
            .replace('__TK__', str(P['streak_slope']))
            .replace('__SW__', str(P['sweep']))
            .replace('__HL__', str(P['halo'])))
-open('agora-dust-lab.html','w').write(out)
+open('aporia-dust-lab.html','w').write(out)
 print('lab', len(out)//1024, 'KB')

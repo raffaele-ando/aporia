@@ -49,64 +49,64 @@ def emit(animated=True):
     if animated:
         anim = '''
       <!-- ANIMAZIONI: rimuovi questi <animate> per una versione statica -->
-      <animate xlink:href="#agoraGrainNoise" attributeName="seed" values="7;19;31;43;55;67;79;91;7"
-               dur="1.1s" calcMode="discrete" repeatCount="indefinite" id="agoraBoil"/>
-      <animate xlink:href="#agoraGrainShift" attributeName="dx" values="0;46;0" dur="26s"
-               repeatCount="indefinite" id="agoraDriftX"/>
-      <animate xlink:href="#agoraGrainShift" attributeName="dy" values="0;-34;0" dur="37s"
-               repeatCount="indefinite" id="agoraDriftY"/>
-      <animate xlink:href="#agoraDisplace" attributeName="scale" values="0;3.2;0" dur="17s"
-               repeatCount="indefinite" id="agoraSwirl"/>
-      <animate xlink:href="#agoraFlowNoise" attributeName="baseFrequency" values="0.006;0.0085;0.006"
-               dur="23s" repeatCount="indefinite" id="agoraFlow"/>'''
+      <animate xlink:href="#aporiaGrainNoise" attributeName="seed" values="7;19;31;43;55;67;79;91;7"
+               dur="1.1s" calcMode="discrete" repeatCount="indefinite" id="aporiaBoil"/>
+      <animate xlink:href="#aporiaGrainShift" attributeName="dx" values="0;46;0" dur="26s"
+               repeatCount="indefinite" id="aporiaDriftX"/>
+      <animate xlink:href="#aporiaGrainShift" attributeName="dy" values="0;-34;0" dur="37s"
+               repeatCount="indefinite" id="aporiaDriftY"/>
+      <animate xlink:href="#aporiaDisplace" attributeName="scale" values="0;3.2;0" dur="17s"
+               repeatCount="indefinite" id="aporiaSwirl"/>
+      <animate xlink:href="#aporiaFlowNoise" attributeName="baseFrequency" values="0.006;0.0085;0.006"
+               dur="23s" repeatCount="indefinite" id="aporiaFlow"/>'''
     return f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="0 0 1254 1254" width="1254" height="1254" id="agoraDustLogo"
-     role="img" aria-labelledby="agoraTitle agoraDesc">
-  <title id="agoraTitle">Agorà — logo dust</title>
-  <desc id="agoraDesc">Logo Agorà, versione polvere. La polvere è procedurale e animabile:
-  vedi i nodi #agoraGrainNoise (grana), #agoraSpeckNoise (granelli), #agoraFlowNoise + #agoraDisplace
-  (deriva/turbolenza), #agoraGrainShift (scorrimento). Variabili CSS: --dust-bg, --dust-glow,
+     viewBox="0 0 1254 1254" width="1254" height="1254" id="aporiaDustLogo"
+     role="img" aria-labelledby="aporiaTitle aporiaDesc">
+  <title id="aporiaTitle">Aporia — logo dust</title>
+  <desc id="aporiaDesc">Logo Aporia, versione polvere. La polvere è procedurale e animabile:
+  vedi i nodi #aporiaGrainNoise (grana), #aporiaSpeckNoise (granelli), #aporiaFlowNoise + #aporiaDisplace
+  (deriva/turbolenza), #aporiaGrainShift (scorrimento). Variabili CSS: --dust-bg, --dust-glow,
   --dust-contrast, --dust-brightness, --dust-amount.</desc>
   <style>
-    #agoraDustLogo {{
+    #aporiaDustLogo {{
       --dust-bg: #000000;        /* colore di fondo                        */
       --dust-glow: 1;            /* 0..1.5 intensità alone sui bordi       */
       --dust-contrast: 1;        /* contrasto generale                     */
       --dust-brightness: 1;      /* luminosità generale                    */
       --dust-amount: 1;          /* 0 = superficie pulita, 1 = polvere piena */
     }}
-    #agoraBg   {{ fill: var(--dust-bg); }}
-    #agoraGlow {{ opacity: var(--dust-glow); }}
-    #agoraDusty {{ opacity: var(--dust-amount); }}
-    #agoraArt  {{ filter: contrast(var(--dust-contrast)) brightness(var(--dust-brightness)); }}
+    #aporiaBg   {{ fill: var(--dust-bg); }}
+    #aporiaGlow {{ opacity: var(--dust-glow); }}
+    #aporiaDusty {{ opacity: var(--dust-amount); }}
+    #aporiaArt  {{ filter: contrast(var(--dust-contrast)) brightness(var(--dust-brightness)); }}
     @media (prefers-reduced-motion: reduce) {{
-      #agoraBoil, #agoraDriftX, #agoraDriftY, #agoraSwirl, #agoraFlow {{ display: none; }}
+      #aporiaBoil, #aporiaDriftX, #aporiaDriftY, #aporiaSwirl, #aporiaFlow {{ display: none; }}
     }}
   </style>
   <defs>
-    <clipPath id="agoraClip"><path d="{SHAPE_D}"/></clipPath>
+    <clipPath id="aporiaClip"><path d="{SHAPE_D}"/></clipPath>
 
     <!-- morbidezza del campo luminoso vettoriale -->
-    <filter id="agoraSoften" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <filter id="aporiaSoften" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="{P['post_sigma']}"/>
     </filter>
 
     <!-- diffusione dell'alone esterno -->
-    <filter id="agoraBloom" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+    <filter id="aporiaBloom" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="{P['glow_sigma']}"/>
     </filter>
 
     <!-- ============ MOTORE POLVERE ============ -->
-    <filter id="agoraDust" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+    <filter id="aporiaDust" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <!-- 1. grana fine -->
-      <feTurbulence id="agoraGrainNoise" type="fractalNoise" baseFrequency="{P['grain_freq']}"
+      <feTurbulence id="aporiaGrainNoise" type="fractalNoise" baseFrequency="{P['grain_freq']}"
                     numOctaves="{P['grain_oct']}" seed="{P['grain_seed']}" result="noiseGrain"/>
-      <feOffset id="agoraGrainShift" in="noiseGrain" dx="0" dy="0" result="noiseGrainMoved"/>
+      <feOffset id="aporiaGrainShift" in="noiseGrain" dx="0" dy="0" result="noiseGrainMoved"/>
       <feColorMatrix in="noiseGrainMoved" type="matrix" result="grain"
         values="{P['grain_slope']} 0 0 0 {gi} {P['grain_slope']} 0 0 0 {gi} {P['grain_slope']} 0 0 0 {gi} 0 0 0 0 1"/>
 
       <!-- 2. granelli sparsi (le particelle che brillano nelle zone scure) -->
-      <feTurbulence id="agoraSpeckNoise" type="fractalNoise" baseFrequency="{P['speck_freq']}"
+      <feTurbulence id="aporiaSpeckNoise" type="fractalNoise" baseFrequency="{P['speck_freq']}"
                     numOctaves="1" seed="{P['speck_seed']}" result="noiseSpeck"/>
       <feColorMatrix in="noiseSpeck" type="matrix" result="speckMono"
         values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
@@ -118,9 +118,9 @@ def emit(animated=True):
       </feComponentTransfer>
 
       <!-- 3. campo di flusso: sposta la polvere e la superficie -->
-      <feTurbulence id="agoraFlowNoise" type="fractalNoise" baseFrequency="{P['warp_freq']}"
+      <feTurbulence id="aporiaFlowNoise" type="fractalNoise" baseFrequency="{P['warp_freq']}"
                     numOctaves="2" seed="{P['warp_seed']}" result="noiseFlow"/>
-      <feDisplacementMap id="agoraDisplace" in="SourceGraphic" in2="noiseFlow" scale="{P['warp_scale']}"
+      <feDisplacementMap id="aporiaDisplace" in="SourceGraphic" in2="noiseFlow" scale="{P['warp_scale']}"
                          xChannelSelector="R" yChannelSelector="G" result="surface"/>
 
       <!-- 4. composizione -->
@@ -130,15 +130,15 @@ def emit(animated=True):
     </filter>
   </defs>
 
-  <rect id="agoraBg" width="1254" height="1254"/>
+  <rect id="aporiaBg" width="1254" height="1254"/>
 
-  <g id="agoraArt">
-    <g id="agoraDusty" filter="url(#agoraDust)">
-      <g id="agoraGlow" filter="url(#agoraBloom)">
+  <g id="aporiaArt">
+    <g id="aporiaDusty" filter="url(#aporiaDust)">
+      <g id="aporiaGlow" filter="url(#aporiaBloom)">
         {gw_svg}
       </g>
-      <g id="agoraShaded" clip-path="url(#agoraClip)" filter="url(#agoraSoften)">
-        <path id="agoraBase" fill="#000" d="{SHAPE_D}"/>
+      <g id="aporiaShaded" clip-path="url(#aporiaClip)" filter="url(#aporiaSoften)">
+        <path id="aporiaBase" fill="#000" d="{SHAPE_D}"/>
         {lv_svg}
       </g>
     </g>
@@ -147,6 +147,6 @@ def emit(animated=True):
 '''
 
 if __name__ == '__main__':
-    open('agora-logo-dust.svg','w').write(emit(True))
-    open('agora-logo-dust-static.svg','w').write(emit(False))
-    print('written', len(open('agora-logo-dust.svg').read())//1024, 'KB')
+    open('aporia-logo-dust.svg','w').write(emit(True))
+    open('aporia-logo-dust-static.svg','w').write(emit(False))
+    print('written', len(open('aporia-logo-dust.svg').read())//1024, 'KB')

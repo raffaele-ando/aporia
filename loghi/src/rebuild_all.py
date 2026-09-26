@@ -40,8 +40,8 @@ W,Hh = maxx-minx, maxy-miny
 f = lambda v: f"{round(float(v[0])-minx,3):g} {round(float(v[1])-miny,3):g}"
 d_tight = "M"+f(verts[0]) + "".join(("L"+f(s[1])) if s[0]=='L' else ("C"+f(s[1])+" "+f(s[2])+" "+f(s[3])) for s in segs) + "Z"
 open('src/d_sym_tight.txt','w').write(d_tight)
-open('agora-logo.svg','w').write(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.3f} {Hh:.3f}" width="{W:.3f}" height="{Hh:.3f}" role="img" aria-labelledby="t">
-  <title id="t">Agorà</title>
+open('aporia-logo.svg','w').write(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.3f} {Hh:.3f}" width="{W:.3f}" height="{Hh:.3f}" role="img" aria-labelledby="t">
+  <title id="t">Aporia</title>
   <path fill="currentColor" d="{d_tight}"/>
 </svg>
 ''')
@@ -67,17 +67,17 @@ lv=[(v, warp_path_d(dd,w,prec=1)) for v,dd in lv_old]
 gw=[(v, warp_path_d(dd,w,prec=1)) for v,dd in gw_old]
 pickle.dump((lv,gw,shape_d), open('src/dust_sym_layers.pkl','wb'))
 import emit_v2 as E
-open('agora-logo-dust.svg','w').write(E.emit(shape_d, lv, gw, animated=True))
-open('agora-logo-dust-static.svg','w').write(E.emit(shape_d, lv, gw, animated=False))
-inv=E.emit(shape_d, lv, gw, animated=False, title='Agorà — logo dust (inverso)')
-inv=inv.replace('--ink: #ffffff;','--ink: #0b0b0c;').replace('--mask: url(#agoraMaskLight);','--mask: url(#agoraMaskDark);')
-open('agora-logo-dust-inverted.svg','w').write(inv)
+open('aporia-logo-dust.svg','w').write(E.emit(shape_d, lv, gw, animated=True))
+open('aporia-logo-dust-static.svg','w').write(E.emit(shape_d, lv, gw, animated=False))
+inv=E.emit(shape_d, lv, gw, animated=False, title='Aporia — logo dust (inverso)')
+inv=inv.replace('--ink: #ffffff;','--ink: #0b0b0c;').replace('--mask: url(#aporiaMaskLight);','--mask: url(#aporiaMaskDark);')
+open('aporia-logo-dust-inverted.svg','w').write(inv)
 nums=[float(x) for x in re.findall(r'-?\d+\.?\d*', shape_d)]
 xs=np.array(nums[0::2]); ys=np.array(nums[1::2]); m=26
 x0,y0=xs.min()-m, ys.min()-m; wd,h=(xs.max()-xs.min())+2*m,(ys.max()-ys.min())+2*m
-svg=open('agora-logo-dust.svg').read()
-open('agora-logo-dust-tight.svg','w').write(svg
+svg=open('aporia-logo-dust.svg').read()
+open('aporia-logo-dust-tight.svg','w').write(svg
    .replace('viewBox="0 0 1254 1254" width="1254" height="1254"', f'viewBox="{x0:.1f} {y0:.1f} {wd:.1f} {h:.1f}" width="{wd:.0f}" height="{h:.0f}"')
-   .replace('<rect id="agoraBg" width="1254" height="1254"/>', f'<rect id="agoraBg" x="{x0:.1f}" y="{y0:.1f}" width="{wd:.1f}" height="{h:.1f}"/>')
-   .replace('<rect id="agoraInk" width="1254" height="1254"/>', f'<rect id="agoraInk" x="{x0:.1f}" y="{y0:.1f}" width="{wd:.1f}" height="{h:.1f}"/>'))
+   .replace('<rect id="aporiaBg" width="1254" height="1254"/>', f'<rect id="aporiaBg" x="{x0:.1f}" y="{y0:.1f}" width="{wd:.1f}" height="{h:.1f}"/>')
+   .replace('<rect id="aporiaInk" width="1254" height="1254"/>', f'<rect id="aporiaInk" x="{x0:.1f}" y="{y0:.1f}" width="{wd:.1f}" height="{h:.1f}"/>'))
 print('completato', f'{time.time()-t0:.0f}s')
