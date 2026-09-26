@@ -12,7 +12,7 @@ la home, che per ora mostra solo la scritta **Aporia**.
 |---|---|
 | [Home](https://raffaele-ando.github.io/aporia/) | l'apertura (versione 10), poi la home "Aporia"; in basso i link alle altre pagine |
 | [Versioni](https://raffaele-ando.github.io/aporia/versioni.html) | tutte le animazioni di apertura fatte finora, da toccare in alto |
-| [Laboratorio](https://raffaele-ando.github.io/aporia/laboratorio.html) | prova colore, fondo e formato, anche come transizione tra due clip; scarica il file se è già pronto |
+| [Laboratorio](https://raffaele-ando.github.io/aporia/laboratorio.html) | lo strumento completo: la polvere calcolata dal vivo nel browser; forme e scritte, transizioni tra clip, teoria dei colori, export dei video |
 | [Download](https://raffaele-ando.github.io/aporia/download.html) | tutti i file pronti, con l'anteprima e quale usare in quale app |
 
 Il sito è pubblicato da GitHub Pages dal ramo `gh-pages`, che l'azione `.github/workflows/sito.yml`
@@ -36,6 +36,23 @@ riallinea a `main` a ogni push: basta lavorare su `main`.
 | `src/master/` | la simulazione v10 salvata come "luce" (bianco su nero, 60 fps): la base di ogni export |
 | `src/logo/` | il logo dust in SVG (dal progetto dei loghi Agorà) da cui parte tutto |
 | `src/` | script che generano tutto |
+
+## Laboratorio (tutto nel browser)
+
+`laboratorio.html` + `assets/studio/`: la stessa fisica di `src/sim_video.py` calcolata dalla scheda
+grafica (WebGL2), quindi ogni modifica si vede subito e si scarica senza Python.
+
+- **Forma e scritte**: fino a 3 forme in fila (la A, il logo, una scritta con qualsiasi carattere,
+  anche caricato, o un'immagine PNG/SVG/foto). Ogni forma ha grandezza, posizione e tenuta (0 = solo
+  di passaggio, come la A originale); tra una forma e l'altra i granelli scivolano sottovento.
+- **Transizione tra clip**: ogni pixel della clip A è un granello (fino a 8 milioni), il vento li
+  porta su tutto lo schermo e li posa nella clip B; a metà la polvere può formare la A, il logo o una
+  scritta. Oppure "muro di polvere" senza clip, che copre tutto lo schermo nel momento del taglio.
+- **Teoria dei colori** (`colors.js`, OKLCH): dal fondo i colori migliori per la polvere, o dalla
+  polvere i fondi più compatibili, per 8 teorie, con il contrasto WCAG.
+- **Export** (`exporter.js`, Mediabunny + fflate in `assets/vendor/`): MP4 H.264, WebM VP9 con
+  trasparenza, ZIP di PNG trasparenti; 720p–1440p, 30/60 fps, fotogrammi esatti.
+- Le impostazioni si salvano da sole; progetti con nome, link e file `.json`.
 
 ## Usare l'animazione fuori dal sito
 
